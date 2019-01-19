@@ -23,6 +23,11 @@
             <name>zxl0714</name>
             <email>zxl0714@gmail.com</email>
         </developer>
+        <developer>
+            <id>kael</id>
+            <name>kael-aiur</name>
+            <email>kael.peng@gmail.com</email>
+        </developer>
     </developers>
 
     <licenses>
