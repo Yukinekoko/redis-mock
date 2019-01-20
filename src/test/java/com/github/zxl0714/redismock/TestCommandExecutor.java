@@ -381,7 +381,10 @@ public class TestCommandExecutor {
     }
     @Test
     public void testKeys() throws ParseErrorException, EOFException {
-        assertCommandEquals(0, array("keys", "prefix:*"));
+        assertCommandOK(array("set", "prefix:a", "a"));
+        assertCommandOK(array("set", "prefix:b", "b"));
+        assertEquals(array("prefix:a","prefix:b"),
+                executor.execCommand(RedisCommandParser.parse(array("keys", "prefix:*"))).toString());
     }
     
 }

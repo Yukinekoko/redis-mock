@@ -1,5 +1,6 @@
 package com.github.zxl0714.redismock;
 
+import com.github.zxl0714.redismock.pattern.KeyPattern;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -24,7 +25,7 @@ public class CommandExecutor {
     public static List<String> getSupportedCommands() {
         ImmutableList.Builder<String> builder = new ImmutableList.Builder<String>();
         Method[] methods = CommandExecutor.class.getMethods();
-        for (Method method : methods) {
+        for(Method method : methods) {
             Class<?>[] params = method.getParameterTypes();
             if (params.length == 1 && params[0].getName().equals(List.class.getName())
                     && method.getReturnType().getName().equals(Slice.class.getName())) {
@@ -112,7 +113,7 @@ public class CommandExecutor {
         if (pos / 8 >= value.length()) {
             byte[] data = new byte[pos / 8 + 1];
             Arrays.fill(data, (byte) 0);
-            for (int i = 0; i < value.length(); i++) {
+            for(int i = 0; i < value.length(); i++) {
                 data[i] = value.data()[i];
             }
             data[pos / 8] = (byte) (bit << (pos % 8));
@@ -143,10 +144,10 @@ public class CommandExecutor {
             return Response.integer(value.length());
         }
         byte[] b = new byte[s.length() + value.length()];
-        for (int i = 0; i < s.length(); i++) {
+        for(int i = 0; i < s.length(); i++) {
             b[i] = s.data()[i];
         }
-        for (int i = s.length(); i < s.length() + value.length(); i++) {
+        for(int i = s.length(); i < s.length() + value.length(); i++) {
             b[i] = value.data()[i - s.length()];
         }
         base.rawPut(key, new Slice(b), -1L);
@@ -311,7 +312,7 @@ public class CommandExecutor {
         checkArgumentsNumberGreater(params, 0);
 
         Set<Slice> set = Sets.newHashSet();
-        for (Slice key : params) {
+        for(Slice key : params) {
             Slice data = base.rawGet(key);
             if (data == null) {
                 continue;
@@ -347,7 +348,7 @@ public class CommandExecutor {
             first = false;
             prev = set.size();
         }
-        for (Slice v : params.subList(1, params.size())) {
+        for(Slice v : params.subList(1, params.size())) {
             set.add(v);
         }
         try {
@@ -384,7 +385,7 @@ public class CommandExecutor {
             }
             first = false;
         }
-        for (Slice v : params.subList(1, params.size())) {
+        for(Slice v : params.subList(1, params.size())) {
             Slice src = base.rawGet(v);
             if (src != null) {
                 try {
@@ -412,7 +413,7 @@ public class CommandExecutor {
         checkArgumentsNumberGreater(params, 0);
 
         ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
-        for (Slice key : params) {
+        for(Slice key : params) {
             builder.add(Response.bulkString(base.rawGet(key)));
 
         }
@@ -423,7 +424,7 @@ public class CommandExecutor {
         checkArgumentsNumberGreater(params, 0);
         checkArgumentsNumberFactor(params, 2);
 
-        for (int i = 0; i < params.size(); i += 2) {
+        for(int i = 0; i < params.size(); i += 2) {
             base.rawPut(params.get(i), params.get(i + 1), -1L);
         }
         return Response.OK;
@@ -451,7 +452,7 @@ public class CommandExecutor {
         checkArgumentsNumberGreater(params, 0);
 
         int count = 0;
-        for (Slice key : params) {
+        for(Slice key : params) {
             Slice value = base.rawGet(key);
             base.del(key);
             if (value != null) {
@@ -507,7 +508,7 @@ public class CommandExecutor {
         } catch (Exception e) {
             throw new WrongValueTypeException("WRONGTYPE Operation against a key holding the wrong kind of value");
         }
-        for (int i = 1; i < params.size(); i++) {
+        for(int i = 1; i < params.size(); i++) {
             list.addFirst(params.get(i));
         }
         try {
@@ -533,7 +534,7 @@ public class CommandExecutor {
         } catch (Exception e) {
             throw new WrongValueTypeException("WRONGTYPE Operation against a key holding the wrong kind of value");
         }
-        for (int i = 1; i < params.size(); i++) {
+        for(int i = 1; i < params.size(); i++) {
             list.addFirst(params.get(i));
         }
         try {
@@ -580,7 +581,7 @@ public class CommandExecutor {
             }
         }
         ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
-        for (int i = start; i <= end && i < list.size(); i++) {
+        for(int i = start; i <= end && i < list.size(); i++) {
             builder.add(Response.bulkString(list.get(i)));
         }
         return Response.array(builder.build());
@@ -679,7 +680,7 @@ public class CommandExecutor {
         } catch (Exception e) {
             throw new WrongValueTypeException("WRONGTYPE Operation against a key holding the wrong kind of value");
         }
-        for (int i = 1; i < params.size(); i++) {
+        for(int i = 1; i < params.size(); i++) {
             list.addLast(params.get(i));
         }
         try {
@@ -689,7 +690,18 @@ public class CommandExecutor {
         }
         return Response.integer(list.size());
     }
-    
+
+    public Slice keys(List<Slice> params) throws WrongNumberOfArgumentsException {
+        checkArgumentsNumberEquals(params, 1);
+        Slice pattern = params.get(0);
+        List<Slice> keys = base.rawKeys(pattern);
+        ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
+        for(Slice key : keys) {
+            builder.add(Response.bulkString(key));
+        }
+        return Response.array(builder.build());
+    }
+
     public synchronized Slice execCommand(RedisCommand command) {
         Preconditions.checkArgument(command.getParameters().size() > 0);
 
