@@ -48,9 +48,20 @@ public class EnumericToken extends AbstractToken {
                 list.add(b);
             }
         }
-        this.expr = new byte[list.size()];
-        for(int i = 0; i < this.expr.length; i++) {
-            this.expr[i] = list.get(i);
+        if (expr[0] == '^') {
+            list.remove(0);
+            this.expr = new byte[Byte.MAX_VALUE - list.size()];
+            for(byte i = 0, j = 0; i < Byte.MAX_VALUE; i++) {
+                if (!list.contains(i)){
+                    this.expr[j] = i;
+                    j++;
+                }
+            }
+        } else {
+            this.expr = new byte[list.size()];
+            for(int i = 0; i < this.expr.length; i++) {
+                this.expr[i] = list.get(i);
+            }
         }
     }
 
