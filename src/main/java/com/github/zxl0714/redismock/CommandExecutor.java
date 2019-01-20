@@ -689,7 +689,7 @@ public class CommandExecutor {
         }
         return Response.integer(list.size());
     }
-
+    
     public synchronized Slice execCommand(RedisCommand command) {
         Preconditions.checkArgument(command.getParameters().size() > 0);
 

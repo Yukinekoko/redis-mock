@@ -379,4 +379,9 @@ public class TestCommandExecutor {
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("rpush", "a", "1"));
     }
+    @Test
+    public void testKeys() throws ParseErrorException, EOFException {
+        assertCommandEquals(0, array("keys", "prefix:*"));
+    }
+    
 }
