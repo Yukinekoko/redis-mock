@@ -114,3 +114,5 @@ incrby
 decr
 
 pfcount
+
+keys
