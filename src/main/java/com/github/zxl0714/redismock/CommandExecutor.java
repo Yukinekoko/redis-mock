@@ -1,18 +1,22 @@
 package com.github.zxl0714.redismock;
 
-import com.github.zxl0714.redismock.pattern.KeyPattern;
+import com.github.zxl0714.redismock.expecptions.InternalException;
+import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
+import com.github.zxl0714.redismock.expecptions.WrongValueTypeException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
-import com.github.zxl0714.redismock.expecptions.WrongValueTypeException;
-import com.github.zxl0714.redismock.expecptions.InternalException;
+import org.luaj.vm2.Globals;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static com.github.zxl0714.redismock.Response.OK;
+import static com.github.zxl0714.redismock.Response.PONG;
 import static com.github.zxl0714.redismock.Utils.*;
 
 /**
@@ -43,7 +47,7 @@ public class CommandExecutor {
         checkArgumentsNumberEquals(params, 2);
 
         base.rawPut(params.get(0), params.get(1), -1L);
-        return Response.OK;
+        return OK;
     }
 
     public Slice setex(List<Slice> params) throws WrongNumberOfArgumentsException, WrongValueTypeException {
@@ -55,7 +59,7 @@ public class CommandExecutor {
         } catch (NumberFormatException e) {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
         }
-        return Response.OK;
+        return OK;
     }
 
     public Slice psetex(List<Slice> params) throws WrongNumberOfArgumentsException, WrongValueTypeException {
@@ -67,7 +71,7 @@ public class CommandExecutor {
         } catch (NumberFormatException e) {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
         }
-        return Response.OK;
+        return OK;
     }
 
     public Slice setnx(List<Slice> params) throws WrongNumberOfArgumentsException {
@@ -406,7 +410,7 @@ public class CommandExecutor {
         } catch (Exception e) {
             throw new InternalException(e.getMessage());
         }
-        return Response.OK;
+        return OK;
     }
 
     public Slice mget(List<Slice> params) throws WrongNumberOfArgumentsException {
@@ -427,7 +431,7 @@ public class CommandExecutor {
         for(int i = 0; i < params.size(); i += 2) {
             base.rawPut(params.get(i), params.get(i + 1), -1L);
         }
-        return Response.OK;
+        return OK;
     }
 
     public Slice getset(List<Slice> params) throws WrongNumberOfArgumentsException {
@@ -700,6 +704,48 @@ public class CommandExecutor {
             builder.add(Response.bulkString(key));
         }
         return Response.array(builder.build());
+    }
+
+    /**
+     * 发布
+     */
+    public Slice publish(List<Slice> params) throws WrongNumberOfArgumentsException {
+        checkArgumentsNumberEquals(params, 2);
+        return Response.integer(1);
+    }
+
+    /**
+     * 订阅
+     */
+    public Slice subscribe(List<Slice> params) throws WrongNumberOfArgumentsException {
+        checkArgumentsNumberEquals(params, 1);
+        ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
+        builder.add(Response.bulkString(new Slice("subscribe")));
+        builder.add(Response.bulkString(new Slice(params.get(0).toString())));
+        builder.add(Response.integer(1));
+        return Response.array(builder.build());
+    }
+
+    /**
+     * 选择数据库
+     */
+    public Slice select(List<Slice> params) throws WrongNumberOfArgumentsException{
+        checkArgumentsNumberEquals(params, 1);
+        return OK;
+    }
+
+    /**
+     * 心跳
+     */
+    public Slice ping(List<Slice> params) {
+        return PONG;
+    }
+
+    /**
+     * 退出
+     */
+    public Slice quit(List<Slice> params) {
+        return OK;
     }
 
     public synchronized Slice execCommand(RedisCommand command) {
