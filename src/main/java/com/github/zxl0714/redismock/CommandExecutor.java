@@ -7,9 +7,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.luaj.vm2.Globals;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -731,6 +728,13 @@ public class CommandExecutor {
      */
     public Slice select(List<Slice> params) throws WrongNumberOfArgumentsException{
         checkArgumentsNumberEquals(params, 1);
+        int index = Integer.parseInt(params.get(0).toString());
+        OptionalRedisBase redisBase = (OptionalRedisBase) base;
+        if (index >= redisBase.getBaseCount()) {
+            return Response.error("ERR DB index is out of range");
+        }
+        SocketAttributes socketAttributes = SocketContextHolder.getSocketAttributes();
+        socketAttributes.setDatabaseIndex(index);
         return OK;
     }
 

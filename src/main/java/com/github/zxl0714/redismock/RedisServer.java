@@ -14,7 +14,7 @@ public class RedisServer {
     private ServiceOptions options = new ServiceOptions();
     private ServerSocket server = null;
     private Thread service = null;
-    private final RedisBase base = new RedisBase();
+    private RedisBase base;
 
     public RedisServer() throws IOException {
         this(0);
@@ -42,6 +42,7 @@ public class RedisServer {
         Preconditions.checkState(server == null);
         Preconditions.checkState(service == null);
 
+        base = new OptionalRedisBase(options.getDatabaseCount());
         server = new ServerSocket(bindPort);
         service = new Thread(new RedisService(server, new CommandExecutor(base), options));
         service.start();

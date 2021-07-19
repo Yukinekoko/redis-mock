@@ -33,6 +33,10 @@ public class RedisWorker implements Runnable {
     }
 
     public void run() {
+        SocketAttributes socketAttributes = new SocketAttributes();
+        socketAttributes.setSocket(socket);
+        socketAttributes.setDatabaseIndex(0);
+        SocketContextHolder.setSocketAttributes(socketAttributes);
         int count = 0;
         while (true) {
             try {
@@ -57,5 +61,6 @@ public class RedisWorker implements Runnable {
         Utils.closeQuietly(socket);
         Utils.closeQuietly(in);
         Utils.closeQuietly(out);
+        SocketContextHolder.removeSocketAttributes();
     }
 }

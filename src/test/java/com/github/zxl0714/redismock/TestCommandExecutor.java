@@ -56,7 +56,7 @@ public class TestCommandExecutor {
 
     @Before
     public void initCommandExecutor() {
-        executor = new CommandExecutor(new RedisBase());
+        executor = new CommandExecutor(new OptionalRedisBase());
     }
 
     @Test
@@ -379,12 +379,30 @@ public class TestCommandExecutor {
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("rpush", "a", "1"));
     }
+
     @Test
     public void testKeys() throws ParseErrorException, EOFException {
         assertCommandOK(array("set", "prefix:a", "a"));
         assertCommandOK(array("set", "prefix:b", "b"));
         assertEquals(array("prefix:a","prefix:b"),
                 executor.execCommand(RedisCommandParser.parse(array("keys", "prefix:*"))).toString());
+    }
+
+    @Test
+    public void testSelect() throws ParseErrorException, EOFException {
+        SocketAttributes socketAttributes = new SocketAttributes();
+        socketAttributes.setDatabaseIndex(0);
+        SocketContextHolder.setSocketAttributes(socketAttributes);
+        assertCommandNull(array("get", "ab"));
+        assertCommandOK(array("SET", "ab", "abc"));
+        assertCommandEquals("abc", array("GET", "ab"));
+        assertCommandOK(array("select", "3"));
+        assertCommandNull(array("get", "ab"));
+        assertCommandOK(array("SET", "ab", "base3"));
+        assertCommandEquals("base3", array("GET", "ab"));
+        assertCommandOK(array("select", "0"));
+        assertCommandEquals("abc", array("GET", "ab"));
+        assertCommandError(array("select", "20"));
     }
     
 }
