@@ -2,7 +2,7 @@ package com.github.zxl0714.redismock;
 
 import com.github.zxl0714.redismock.expecptions.EOFException;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static com.github.zxl0714.redismock.RedisCommandParser.parse;
@@ -21,14 +21,20 @@ public class TestCommandExecutor {
         return "$" + param.length() + CRLF + param.toString() + CRLF;
     }
 
-    private static String array(CharSequence ...params) {
+    private static String bulkLong(Long param) {
+        return ":" + param + CRLF;
+    }
+
+    private static String array(Object ...params) {
         StringBuilder builder = new StringBuilder();
         builder.append('*').append(params.length).append(CRLF);
-        for (CharSequence param : params) {
+        for (Object param : params) {
             if (param == null) {
                 builder.append("$-1").append(CRLF);
-            } else {
-                builder.append(bulkString(param));
+            } else if (param instanceof CharSequence) {
+                builder.append(bulkString((CharSequence) param));
+            } else if (param instanceof Long) {
+                builder.append(bulkLong((Long) param));
             }
         }
         return builder.toString();
@@ -54,8 +60,8 @@ public class TestCommandExecutor {
         assertEquals('-', executor.execCommand(parse(command)).data()[0]);
     }
 
-    @Before
-    public void initCommandExecutor() {
+    @BeforeClass
+    public static void initCommandExecutor() {
         executor = new CommandExecutor(new OptionalRedisBase());
     }
 
@@ -403,6 +409,24 @@ public class TestCommandExecutor {
         assertCommandOK(array("select", "0"));
         assertCommandEquals("abc", array("GET", "ab"));
         assertCommandError(array("select", "20"));
+    }
+
+    @Test
+    public void testPublish() throws ParseErrorException, EOFException {
+        assertCommandEquals(0,
+                array("publish", "channel_1", "Hello World"));
+    }
+
+    @Test
+    public void testSubscribe() throws ParseErrorException, EOFException {
+        SocketContextHolder.setSocketAttributes(new SocketAttributes());
+        assertEquals(array("subscribe", "channel_1", 1L),
+                executor.execCommand(RedisCommandParser.parse(array("subscribe", "channel_1"))).toString());
+        assertEquals(array("subscribe", "channel_1", 1L),
+                executor.execCommand(RedisCommandParser.parse(array("subscribe", "channel_1"))).toString());
+        assertEquals(array("subscribe", "channel_2", 1L, "subscribe", "channel_3", 2L),
+                executor.execCommand(RedisCommandParser
+                        .parse(array("subscribe", "channel_2", "channel_3"))).toString());
     }
     
 }

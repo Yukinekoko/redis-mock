@@ -12,8 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import static com.github.zxl0714.redismock.Response.OK;
-import static com.github.zxl0714.redismock.Response.PONG;
+import static com.github.zxl0714.redismock.Response.*;
 import static com.github.zxl0714.redismock.Utils.*;
 
 /**
@@ -726,6 +725,26 @@ public class CommandExecutor {
             builder.add(Response.integer(i + 1));
             base.subscribe(params.get(i), socketAttributes.getSocket());
         }
+        return Response.array(builder.build());
+    }
+
+    /**
+     * 取消订阅
+     * */
+    public Slice unsubscribe(List<Slice> params) throws WrongNumberOfArgumentsException {
+        SocketAttributes socketAttributes = SocketContextHolder.getSocketAttributes();
+        Preconditions.checkNotNull(socketAttributes);
+        if (params.size() == 0) {
+            base.unSubscribeAll(socketAttributes.getSocket());
+        } else {
+            for (Slice slice : params) {
+                base.unSubscribe(slice, socketAttributes.getSocket());
+            }
+        }
+        ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
+        builder.add(Response.bulkString(new Slice("unsubscribe")));
+        builder.add(NULL);
+        builder.add(Response.integer(0));
         return Response.array(builder.build());
     }
 

@@ -144,6 +144,25 @@ public class RedisBase {
         channel.add(socket);
     }
 
+    public synchronized boolean unSubscribe(Slice channelKey, Socket socket) {
+        String channelName = channelKey.toString();
+        Set<Socket> channel = channels.get(channelName);
+        if (channel != null) {
+            return channel.remove(socket);
+        }
+        return false;
+    }
+
+    public synchronized int unSubscribeAll(Socket socket) {
+        int resp = 0;
+        for (Set<Socket> socketSet : channels.values()) {
+            if (socketSet.remove(socket)) {
+                resp++;
+            }
+        }
+        return resp;
+    }
+
     public synchronized int publish(Slice channelKey, Slice messageKey) {
         String channelName = channelKey.toString();
         Set<Socket> channel = channels.get(channelName);
@@ -162,7 +181,7 @@ public class RedisBase {
                 Slice resp = Response.array(builder.build());
                 outputStream.write(resp.data());
                 outputStream.flush();
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 // socket被关闭了就从订阅者Set中移除
                 iterator.remove();
             }
