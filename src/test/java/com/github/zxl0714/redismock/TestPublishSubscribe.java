@@ -1,5 +1,6 @@
 package com.github.zxl0714.redismock;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,6 +26,11 @@ public class TestPublishSubscribe {
     public static void init() throws IOException {
         redisServer = RedisServer.newRedisServer();
         redisServer.start();
+    }
+
+    @AfterClass
+    public static void destroy() {
+        redisServer.stop();
     }
 
     @Before
@@ -53,7 +59,6 @@ public class TestPublishSubscribe {
         while (flag.get() <= 0) {
             Thread.sleep(500);
         }
-        subscribeThread.interrupt();
     }
 
     @Test
@@ -84,14 +89,13 @@ public class TestPublishSubscribe {
         while (flag.get() <= 1) {
             Thread.sleep(500);
         }
-        subscribeThreadA.interrupt();
-        subscribeThreadB.interrupt();
     }
 
     public void testMultiplePublish() {
         Jedis jedis = new Jedis(redisServer.getHost(), redisServer.getBindPort());
         assertEquals(new Long(2), jedis.publish("multiple_1", "Hello World"));
         assertEquals(new Long(0), jedis.publish("multiple_2", "Hello World"));
+        jedis.disconnect();
     }
 
     public void testMultipleSubscribe() {
@@ -102,6 +106,7 @@ public class TestPublishSubscribe {
                 assertEquals("multiple_1", channel);
                 assertEquals("Hello World", message);
                 flag.incrementAndGet();
+                unsubscribe();
             }
 
             @Override
@@ -110,23 +115,25 @@ public class TestPublishSubscribe {
                 assertEquals(1, subscribedChannels);
             }
         }, "multiple_1");
-
+        jedis.disconnect();
     }
 
     public void testPublish() {
         Jedis jedis = new Jedis(redisServer.getHost(), redisServer.getBindPort());
         assertEquals(new Long(1), jedis.publish("channel_1", "Hello World"));
         assertEquals(new Long(0), jedis.publish("channel_2", "Hello World"));
+        jedis.disconnect();
     }
 
     public void testSubscribe() {
-        Jedis jedis = new Jedis(redisServer.getHost(), redisServer.getBindPort());
+        final Jedis jedis = new Jedis(redisServer.getHost(), redisServer.getBindPort());
         jedis.subscribe(new JedisPubSub() {
             @Override
             public void onMessage(String channel, String message) {
                 assertEquals("Hello World", message);
                 assertEquals("channel_1", channel);
                 flag.incrementAndGet();
+                unsubscribe();
             }
 
             @Override
@@ -135,7 +142,7 @@ public class TestPublishSubscribe {
                 assertEquals(1, subscribedChannels);
             }
         }, "channel_1");
-
+        jedis.disconnect();
     }
 
 }

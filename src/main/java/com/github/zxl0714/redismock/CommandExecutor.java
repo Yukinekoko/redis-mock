@@ -754,8 +754,7 @@ public class CommandExecutor {
     public Slice select(List<Slice> params) throws WrongNumberOfArgumentsException{
         checkArgumentsNumberEquals(params, 1);
         int index = Integer.parseInt(params.get(0).toString());
-        OptionalRedisBase redisBase = (OptionalRedisBase) base;
-        if (index >= redisBase.getBaseCount()) {
+        if (index >= base.getDataBaseCount() || index < 0) {
             return Response.error("ERR DB index is out of range");
         }
         SocketAttributes socketAttributes = SocketContextHolder.getSocketAttributes();
