@@ -32,6 +32,7 @@ public class RedisWorker implements Runnable {
         this.out = socket.getOutputStream();
     }
 
+    @Override
     public void run() {
         SocketAttributes socketAttributes = new SocketAttributes();
         socketAttributes.setSocket(socket);
