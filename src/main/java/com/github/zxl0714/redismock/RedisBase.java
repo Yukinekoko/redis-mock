@@ -12,14 +12,19 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Created by Xiaolu on 2015/4/20.
  */
 public class RedisBase {
 
+    private static final Logger LOGGER = Logger.getLogger(RedisBase.class.getName());
+
     private final RedisDataBase[] dataBases;
+
     private final List<RedisBase> syncBases = Lists.newArrayList();
+
     private final Map<String, Set<Socket>> channels = Maps.newHashMap();
 
     public RedisBase() {
@@ -57,7 +62,7 @@ public class RedisBase {
     public synchronized List<Slice> rawKeys(Slice pattern) {
         RedisDataBase dataBase = selectDataBase();
         KeyPattern p = new KeyPattern(pattern);
-        List<Slice> keys = new ArrayList<Slice>();
+        List<Slice> keys = new ArrayList<>();
         for(Map.Entry<Slice, Slice> entry : dataBase.getBase().entrySet()) {
             if(p.match(entry.getKey())){
                 Long deadline = dataBase.getDeadlines().get(entry.getKey());
@@ -164,11 +169,7 @@ public class RedisBase {
 
     public synchronized void subscribe(Slice channelKey, Socket socket) {
         String channelName = channelKey.toString();
-        Set<Socket> channel = channels.get(channelName);
-        if (channel == null) {
-            channel = Sets.newHashSet();
-            channels.put(channelName, channel);
-        }
+        Set<Socket> channel = channels.computeIfAbsent(channelName, k -> Sets.newHashSet());
         channel.add(socket);
     }
 
@@ -202,14 +203,15 @@ public class RedisBase {
             Socket socket = iterator.next();
             try {
                 OutputStream outputStream = socket.getOutputStream();
-                ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
+                ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<>();
                 builder.add(Response.bulkString(new Slice("message")));
                 builder.add(Response.bulkString(channelKey));
                 builder.add(Response.bulkString(messageKey));
                 Slice resp = Response.array(builder.build());
                 outputStream.write(resp.data());
                 outputStream.flush();
-            } catch (Throwable e) {
+            } catch (IOException e) {
+                LOGGER.warning(channelName + " 订阅者socket.outputStream获取异常：" + e.getMessage());
                 // socket被关闭了就从订阅者Set中移除
                 iterator.remove();
             }

@@ -426,8 +426,10 @@ public class TestCommandExecutor {
         assertCommandEquals("base3", array("GET", "ab"));
         assertCommandOK(array("select", "0"));
         assertCommandEquals("abc", array("GET", "ab"));
+        // error
         assertCommandError(array("select", "20"));
         assertCommandError(array("select", "-10"));
+        assertCommandError(array("select", "abc"));
     }
 
     @Test
