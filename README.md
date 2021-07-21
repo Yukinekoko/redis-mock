@@ -116,3 +116,15 @@ decr
 pfcount
 
 keys
+
+subscribe
+
+unsubscribe
+
+publish
+
+select
+
+ping
+
+quit
