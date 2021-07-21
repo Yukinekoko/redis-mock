@@ -14,14 +14,19 @@ public class RedisServer {
     private ServiceOptions options = new ServiceOptions();
     private ServerSocket server = null;
     private Thread service = null;
-    private final RedisBase base = new RedisBase();
+    private final RedisBase base;
 
     public RedisServer() throws IOException {
         this(0);
     }
 
     public RedisServer(int port) throws IOException {
+        this(port, 16);
+    }
+
+    public RedisServer(int port, int databaseCount) {
         this.bindPort = port;
+        this.base = new RedisBase(databaseCount);
     }
 
     static public RedisServer newRedisServer() throws IOException {
@@ -30,6 +35,9 @@ public class RedisServer {
 
     static public RedisServer newRedisServer(int port) throws IOException {
         return new RedisServer(port);
+    }
+    static public RedisServer newRedisServer(int port, int databaseCount) {
+        return new RedisServer(port, databaseCount);
     }
 
     public void setOptions(ServiceOptions options) {

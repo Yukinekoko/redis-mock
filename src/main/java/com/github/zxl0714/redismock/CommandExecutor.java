@@ -7,16 +7,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.luaj.vm2.Globals;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import static com.github.zxl0714.redismock.Response.OK;
-import static com.github.zxl0714.redismock.Response.PONG;
+import static com.github.zxl0714.redismock.Response.*;
 import static com.github.zxl0714.redismock.Utils.*;
 
 /**
@@ -711,18 +707,44 @@ public class CommandExecutor {
      */
     public Slice publish(List<Slice> params) throws WrongNumberOfArgumentsException {
         checkArgumentsNumberEquals(params, 2);
-        return Response.integer(1);
+        int resp = base.publish(params.get(0), params.get(1));
+        return Response.integer(resp);
     }
 
     /**
      * 订阅
      */
     public Slice subscribe(List<Slice> params) throws WrongNumberOfArgumentsException {
-        checkArgumentsNumberEquals(params, 1);
+        checkArgumentsNumberGreater(params, 0);
+        SocketAttributes socketAttributes = SocketContextHolder.getSocketAttributes();
+        Preconditions.checkNotNull(socketAttributes);
         ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
-        builder.add(Response.bulkString(new Slice("subscribe")));
-        builder.add(Response.bulkString(new Slice(params.get(0).toString())));
-        builder.add(Response.integer(1));
+        for (int i = 0; i < params.size(); i++) {
+            builder.add(Response.bulkString(new Slice("subscribe")));
+            builder.add(Response.bulkString(new Slice(params.get(i).toString())));
+            builder.add(Response.integer(i + 1));
+            base.subscribe(params.get(i), socketAttributes.getSocket());
+        }
+        return Response.array(builder.build());
+    }
+
+    /**
+     * 取消订阅
+     * */
+    public Slice unsubscribe(List<Slice> params) throws WrongNumberOfArgumentsException {
+        SocketAttributes socketAttributes = SocketContextHolder.getSocketAttributes();
+        Preconditions.checkNotNull(socketAttributes);
+        if (params.size() == 0) {
+            base.unSubscribeAll(socketAttributes.getSocket());
+        } else {
+            for (Slice slice : params) {
+                base.unSubscribe(slice, socketAttributes.getSocket());
+            }
+        }
+        ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
+        builder.add(Response.bulkString(new Slice("unsubscribe")));
+        builder.add(NULL);
+        builder.add(Response.integer(0));
         return Response.array(builder.build());
     }
 
@@ -731,6 +753,12 @@ public class CommandExecutor {
      */
     public Slice select(List<Slice> params) throws WrongNumberOfArgumentsException{
         checkArgumentsNumberEquals(params, 1);
+        int index = Integer.parseInt(params.get(0).toString());
+        if (index >= base.getDataBaseCount() || index < 0) {
+            return Response.error("ERR DB index is out of range");
+        }
+        SocketAttributes socketAttributes = SocketContextHolder.getSocketAttributes();
+        socketAttributes.setDatabaseIndex(index);
         return OK;
     }
 

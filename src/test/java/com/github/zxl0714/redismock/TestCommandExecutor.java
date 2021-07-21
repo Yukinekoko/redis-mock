@@ -21,6 +21,10 @@ public class TestCommandExecutor {
         return "$" + param.length() + CRLF + param.toString() + CRLF;
     }
 
+    private static String bulkLong(Long param) {
+        return ":" + param + CRLF;
+    }
+
     private static String array(CharSequence ...params) {
         StringBuilder builder = new StringBuilder();
         builder.append('*').append(params.length).append(CRLF);
@@ -29,6 +33,26 @@ public class TestCommandExecutor {
                 builder.append("$-1").append(CRLF);
             } else {
                 builder.append(bulkString(param));
+            }
+        }
+        return builder.toString();
+    }
+
+    /**
+     * 构造响应的列表
+     * */
+    private static String responseArray(Object ...params) {
+        StringBuilder builder = new StringBuilder();
+        builder.append('*').append(params.length).append(CRLF);
+        for (Object param : params) {
+            if (param == null) {
+                builder.append("$-1").append(CRLF);
+            } else if (param instanceof CharSequence) {
+                builder.append(bulkString((CharSequence) param));
+            } else if (param instanceof Long) {
+                builder.append(bulkLong((Long) param));
+            } else if (param instanceof Slice) {
+                builder.append(param.toString());
             }
         }
         return builder.toString();
@@ -57,6 +81,9 @@ public class TestCommandExecutor {
     @Before
     public void initCommandExecutor() {
         executor = new CommandExecutor(new RedisBase());
+        SocketAttributes socketAttributes = new SocketAttributes();
+        socketAttributes.setDatabaseIndex(0);
+        SocketContextHolder.setSocketAttributes(socketAttributes);
     }
 
     @Test
@@ -379,12 +406,54 @@ public class TestCommandExecutor {
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("rpush", "a", "1"));
     }
+
     @Test
     public void testKeys() throws ParseErrorException, EOFException {
         assertCommandOK(array("set", "prefix:a", "a"));
         assertCommandOK(array("set", "prefix:b", "b"));
         assertEquals(array("prefix:a","prefix:b"),
                 executor.execCommand(RedisCommandParser.parse(array("keys", "prefix:*"))).toString());
+    }
+
+    @Test
+    public void testSelect() throws ParseErrorException, EOFException {
+        assertCommandNull(array("get", "ab"));
+        assertCommandOK(array("SET", "ab", "abc"));
+        assertCommandEquals("abc", array("GET", "ab"));
+        assertCommandOK(array("select", "3"));
+        assertCommandNull(array("get", "ab"));
+        assertCommandOK(array("SET", "ab", "base3"));
+        assertCommandEquals("base3", array("GET", "ab"));
+        assertCommandOK(array("select", "0"));
+        assertCommandEquals("abc", array("GET", "ab"));
+        assertCommandError(array("select", "20"));
+        assertCommandError(array("select", "-10"));
+    }
+
+    @Test
+    public void testPublish() throws ParseErrorException, EOFException {
+        assertCommandEquals(0,
+                array("publish", "channel_1", "Hello World"));
+    }
+
+    @Test
+    public void testSubscribe() throws ParseErrorException, EOFException {
+        assertEquals(responseArray("subscribe", "channel_1", 1L),
+                executor.execCommand(RedisCommandParser.parse(array("subscribe", "channel_1"))).toString());
+        assertEquals(responseArray("subscribe", "channel_1", 1L),
+                executor.execCommand(RedisCommandParser.parse(array("subscribe", "channel_1"))).toString());
+        assertEquals(responseArray("subscribe", "channel_2", 1L, "subscribe", "channel_3", 2L),
+                executor.execCommand(RedisCommandParser
+                        .parse(array("subscribe", "channel_2", "channel_3"))).toString());
+    }
+
+    @Test
+    public void testUnsubscribe() throws ParseErrorException, EOFException {
+        assertEquals(responseArray("unsubscribe", Response.NULL, 0L),
+                executor.execCommand(RedisCommandParser.parse(array("unsubscribe", "channel_1"))).toString());
+        assertEquals(responseArray("unsubscribe", Response.NULL, 0L),
+                executor.execCommand(
+                        RedisCommandParser.parse(array("unsubscribe", "channel_1", "c2", "c3"))).toString());
     }
     
 }

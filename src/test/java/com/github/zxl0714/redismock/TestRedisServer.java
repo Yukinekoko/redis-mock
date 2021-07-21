@@ -42,6 +42,28 @@ public class TestRedisServer {
     }
 
     @Test
+    public void testDefaultDataBaseCount() throws IOException {
+        RedisServer server = RedisServer.newRedisServer();
+        assertEquals(16, server.getBase().getDataBaseCount());
+    }
+
+    @Test
+    public void testCustomDataBaseCount() {
+        RedisServer server = RedisServer.newRedisServer(0, 20);
+        assertEquals(20, server.getBase().getDataBaseCount());
+    }
+
+    @Test
+    public void testErrorDataBaseCount() {
+        try {
+            RedisServer server = RedisServer.newRedisServer(0, -10);
+            assertTrue(false);
+        } catch (NegativeArraySizeException e) {
+            // OK
+        }
+    }
+
+    @Test
     public void testBindUsedPort() throws IOException, InterruptedException {
         RedisServer server1 = RedisServer.newRedisServer();
         server1.start();

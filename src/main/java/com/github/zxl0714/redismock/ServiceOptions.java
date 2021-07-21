@@ -16,4 +16,5 @@ public class ServiceOptions {
     public int getCloseSocketAfterSeveralCommands() {
         return closeSocketAfterSeveralCommands;
     }
+
 }
