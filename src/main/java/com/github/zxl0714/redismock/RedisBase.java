@@ -22,7 +22,7 @@ public class RedisBase {
     private static final Logger LOGGER = Logger.getLogger(RedisBase.class.getName());
 
     private final RedisDataBase[] dataBases;
-
+    // TODO : (snowmeow, 2021-7-22) 考虑主从模式下指令的操作限制
     private final List<RedisBase> syncBases = Lists.newArrayList();
 
     private final Map<String, Set<Socket>> channels = Maps.newHashMap();

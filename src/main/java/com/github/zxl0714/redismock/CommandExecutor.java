@@ -781,6 +781,13 @@ public class CommandExecutor {
         return OK;
     }
 
+    /**
+     * eval执行lua脚本
+     * */
+    public Slice eval(List<Slice> params) {
+        return OK;
+    }
+
     public synchronized Slice execCommand(RedisCommand command) {
         Preconditions.checkArgument(command.getParameters().size() > 0);
 
