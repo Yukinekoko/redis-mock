@@ -1,8 +1,10 @@
 package com.github.zxl0714.redismock;
 
 import com.github.zxl0714.redismock.expecptions.InternalException;
+import com.github.zxl0714.redismock.expecptions.ParseErrorException;
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
 import com.github.zxl0714.redismock.expecptions.WrongValueTypeException;
+import com.github.zxl0714.redismock.lua.LuaExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -22,6 +24,8 @@ public class CommandExecutor {
 
     private final RedisBase base;
 
+    private final LuaExecutor luaExecutor;
+
     public static List<String> getSupportedCommands() {
         ImmutableList.Builder<String> builder = new ImmutableList.Builder<String>();
         Method[] methods = CommandExecutor.class.getMethods();
@@ -37,6 +41,7 @@ public class CommandExecutor {
 
     public CommandExecutor(RedisBase base) {
         this.base = base;
+        luaExecutor = new LuaExecutor();
     }
 
     public Slice set(List<Slice> params) throws WrongNumberOfArgumentsException {
@@ -784,8 +789,8 @@ public class CommandExecutor {
     /**
      * eval执行lua脚本
      * */
-    public Slice eval(List<Slice> params) {
-        return OK;
+    public Slice eval(List<Slice> params) throws WrongNumberOfArgumentsException, ParseErrorException {
+        return luaExecutor.execute(params);
     }
 
     public synchronized Slice execCommand(RedisCommand command) {

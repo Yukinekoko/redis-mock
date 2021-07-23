@@ -4,12 +4,9 @@ import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
 import com.github.zxl0714.redismock.lua.LuaExecutor;
 import org.junit.Before;
 import org.junit.Test;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * @author snowmeow(yuki754685421 @ 163.com)
@@ -25,7 +22,7 @@ public class TestLuaExecutor {
         socketAttributes.setDatabaseIndex(0);
         SocketContextHolder.setSocketAttributes(socketAttributes);
 
-        luaExecutor = new LuaExecutor(new RedisBase());
+        luaExecutor = new LuaExecutor();
     }
 
     @Test
@@ -43,13 +40,6 @@ public class TestLuaExecutor {
         params.add(keyb);
         params.add(arg);
         params.add(argb);
-
-        LuaValue result = (LuaValue) luaExecutor.execute(params);
-        System.out.println();
-        sc = new Slice("return 2.3333");
-        params.set(0, sc);
-        Varargs args = luaExecutor.execute(params);
-        System.out.println(args.arg1().checkdouble());;
 
     }
 

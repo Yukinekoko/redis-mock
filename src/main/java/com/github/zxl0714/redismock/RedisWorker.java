@@ -38,6 +38,7 @@ public class RedisWorker implements Runnable {
         SocketAttributes socketAttributes = new SocketAttributes();
         socketAttributes.setSocket(socket);
         socketAttributes.setDatabaseIndex(0);
+        socketAttributes.setCommandExecutor(executor);
         SocketContextHolder.setSocketAttributes(socketAttributes);
         int count = 0;
         while (true) {

@@ -45,6 +45,8 @@ public class LuaToRedisReplyParser {
             } else {
                 return Response.NULL;
             }
+        } else if (arg.isnil()) {
+            return Response.NULL;
         }
         LOGGER.warning("parseLua2Redis error type, type is: " + arg.typename());
         throw new ParseErrorException();

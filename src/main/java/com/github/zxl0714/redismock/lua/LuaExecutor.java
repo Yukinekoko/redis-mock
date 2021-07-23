@@ -1,16 +1,11 @@
 package com.github.zxl0714.redismock.lua;
 
-import com.github.zxl0714.redismock.RedisBase;
+import com.github.zxl0714.redismock.Response;
 import com.github.zxl0714.redismock.Slice;
+import com.github.zxl0714.redismock.expecptions.ParseErrorException;
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaThread;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
-import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.*;
-import org.luaj.vm2.lib.jse.JseBaseLib;
-import org.luaj.vm2.lib.jse.JseOsLib;
+import com.github.zxl0714.redismock.parser.LuaToRedisReplyParser;
+import org.luaj.vm2.*;
 import org.luaj.vm2.script.LuaScriptEngine;
 
 import javax.script.Bindings;
@@ -31,35 +26,17 @@ public class LuaExecutor {
 
     private static final LuaScriptEngine engine;
 
-    private final RedisBase base;
-
     static {
         ScriptEngineManager manager = new ScriptEngineManager();
         engine = (LuaScriptEngine) manager.getEngineByExtension(".lua");
 
-        LuaTable luaEnvironment = new LuaTable();
-        LuaThread.setGlobals(luaEnvironment);
-
-        luaEnvironment.load(new JseBaseLib());
-        luaEnvironment.load(new PackageLib());
-        luaEnvironment.load(new TableLib());
-        luaEnvironment.load(new StringLib());
-        luaEnvironment.load(new MathLib());
-        luaEnvironment.load(new CoroutineLib());
-        luaEnvironment.load(new JseOsLib());
-
-        LuaC.install();
+        LuaTable luaEnvironment = (LuaTable) LuaThread.getGlobals();
+        luaEnvironment.load(new RedisLib());
     }
 
-    public LuaExecutor(RedisBase base) {
-        this.base = base;
-
-    }
-
-    public Varargs execute(List<Slice> params) throws WrongNumberOfArgumentsException {
+    public Slice execute(List<Slice> params) throws WrongNumberOfArgumentsException, ParseErrorException {
         checkArgumentsNumberGreater(params, 1);
-        CompiledScript compiledScript = null;
-        Object result = null;
+        CompiledScript compiledScript;
         int keyCount;
         try {
             keyCount = Integer.parseInt(params.get(1).toString());
@@ -96,14 +73,14 @@ public class LuaExecutor {
         if (args.length != 0) {
             bindings.put("ARGV", argTable);
         }
-
+        Varargs scriptResult;
         try {
             compiledScript = engine.compile(params.get(0).toString());
-            result = compiledScript.eval(bindings);
-        } catch (ScriptException e) {
-            e.printStackTrace();
+            scriptResult = (Varargs) compiledScript.eval(bindings);
+        } catch (ScriptException | LuaError e) {
+            return Response.error("ERR " +e.getMessage());
         }
-        return (Varargs) result;
+        return LuaToRedisReplyParser.parse((scriptResult).arg1());
     }
 
 }
