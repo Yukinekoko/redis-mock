@@ -2,11 +2,20 @@ package com.github.zxl0714.redismock;
 
 import com.github.zxl0714.redismock.expecptions.EOFException;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import com.github.zxl0714.redismock.parser.LuaToRedisReplyParser;
+import com.github.zxl0714.redismock.parser.RedisCommandParser;
+import com.github.zxl0714.redismock.parser.RedisToLuaReplyParser;
+import org.junit.Before;
 import org.junit.Test;
 import org.luaj.vm2.LuaValue;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import static org.junit.Assert.*;
 
@@ -15,223 +24,285 @@ import static org.junit.Assert.*;
  */
 public class TestProtocolParser {
 
-    @Test
-    public void testConsumeCharacter() throws ParseErrorException, EOFException {
-        RedisProtocolParser parser = new RedisProtocolParser("a");
-        assertEquals(parser.consumeByte(), 'a');
+    private RedisCommandParser parse;
+
+    private InputStream getInputStream(String command) {
+        return new ByteArrayInputStream(command.getBytes());
+    }
+
+    private void setMessage(String message) throws NoSuchFieldException, IllegalAccessException {
+        Field field = RedisCommandParser.class.getSuperclass().getDeclaredField("input");
+        field.setAccessible(true);
+        field.set(parse, getInputStream(message));
+
+    }
+
+    @Before
+    public void init() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Constructor<? extends RedisCommandParser> constructor =
+            RedisCommandParser.class.getDeclaredConstructor(InputStream.class);
+        constructor.setAccessible(true);
+        parse = constructor.newInstance(new ByteArrayInputStream("".getBytes()));
+
+
     }
 
     @Test
-    public void testExpectCharacter() throws ParseErrorException, EOFException {
-        RedisProtocolParser parser = new RedisProtocolParser("a");
-        parser.expectByte((byte) 'a');
+    public void testConsumeCharacter() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
+        setMessage("a");
+        Method method = RedisCommandParser.class.getSuperclass().getDeclaredMethod("consumeByte");
+        method.setAccessible(true);
+        assertEquals((byte)method.invoke(parse), 'a');
     }
 
     @Test
-    public void testConsumeLong() throws ParseErrorException {
-        RedisProtocolParser parser = new RedisProtocolParser("12345678901234\r");
-        assertEquals(parser.consumePositiveLong(), 12345678901234L);
+    public void testExpectCharacter() throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        setMessage("a");
+        Method method = RedisCommandParser.class.getSuperclass().getDeclaredMethod("expectByte", byte.class);
+        method.setAccessible(true);
+        method.invoke(parse, (byte)'a');
     }
 
     @Test
-    public void testConsumeString() throws ParseErrorException {
-        RedisProtocolParser parser = new RedisProtocolParser("abcd");
-        assertEquals(parser.consumeSlice(4).toString(), "abcd");
+    public void testConsumeLong() throws Exception {
+        setMessage("12345678901234\r");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumePositiveLong");
+        method.setAccessible(true);
+        assertEquals((long)method.invoke(parse), 12345678901234L);
     }
 
     @Test
-    public void testConsumeCount1() throws ParseErrorException, EOFException {
-        RedisProtocolParser parser = new RedisProtocolParser("*12\r\n");
-        assertEquals(parser.consumeCount(), 12L);
+    public void testConsumeString() throws Exception {
+        setMessage("abcd");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeSlice", long.class);
+        method.setAccessible(true);
+        assertEquals( method.invoke(parse, 4L).toString(), "abcd");
     }
 
     @Test
-    public void testConsumeCount2() throws EOFException {
-        RedisProtocolParser parser = new RedisProtocolParser("*2\r");
+    public void testConsumeCount1() throws Exception {
+        setMessage("*12\r\n");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeCount");
+        method.setAccessible(true);
+        assertEquals(method.invoke(parse), 12L);
+    }
+
+    @Test
+    public void testConsumeCount2() throws Exception {
+        setMessage("*2\r");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeCount");
+        method.setAccessible(true);
         try {
-            parser.consumeCount();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
             // OK
         }
     }
 
 
     @Test
-    public void testConsumeParameter() throws ParseErrorException {
-        RedisProtocolParser parser = new RedisProtocolParser("$5\r\nabcde\r\n");
-        assertEquals(parser.consumeParameter().toString(), "abcde");
+    public void testConsumeParameter() throws Exception {
+        setMessage("$5\r\nabcde\r\n");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeParameter");
+        method.setAccessible(true);
+        assertEquals(method.invoke(parse).toString(), "abcde");
     }
 
     @Test
-    public void testParse() throws ParseErrorException, EOFException {
-        RedisCommand cmd = RedisProtocolParser.parseCommand("*3\r\n$0\r\n\r\n$4\r\nabcd\r\n$2\r\nef\r\n");
+    public void testParse() throws Exception {
+        RedisCommand cmd = RedisCommandParser.parse(getInputStream("*3\r\n$0\r\n\r\n$4\r\nabcd\r\n$2\r\nef\r\n"));
         assertEquals(cmd.getParameters().get(0).toString(), "");
         assertEquals(cmd.getParameters().get(1).toString(), "abcd");
         assertEquals(cmd.getParameters().get(2).toString(), "ef");
     }
 
     @Test
-    public void testConsumeCharacterError() throws ParseErrorException {
-        RedisProtocolParser parser = new RedisProtocolParser("");
+    public void testConsumeCharacterError() throws Exception {
+        setMessage("");
+        Method method = RedisCommandParser.class.getSuperclass().getDeclaredMethod("consumeByte");
+        method.setAccessible(true);
         try {
-            parser.consumeByte();
-            assertTrue(false);
-        } catch (EOFException e) {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
             // OK
         }
     }
 
     @Test
-    public void testExpectCharacterError1() throws EOFException {
-        RedisProtocolParser parser = new RedisProtocolParser("a");
+    public void testExpectCharacterError1() throws Exception {
+        setMessage("a");
+        Method method = RedisCommandParser.class.getSuperclass().getDeclaredMethod("expectByte", byte.class);
+        method.setAccessible(true);
         try {
-            parser.expectByte((byte) 'b');
-            assertTrue(false);
-        } catch (ParseErrorException e) {
+            method.invoke(parse, (byte)'b');
+            throw new AssertionError();
+        } catch (Exception e) {
             // OK
         }
     }
 
     @Test
-    public void testExpectCharacterError2() throws ParseErrorException {
+    public void testExpectCharacterError2() throws Exception {
         InputStream in = new InputStream() {
             @Override
             public int read() throws IOException {
                 throw new IOException();
             }
         };
-        RedisProtocolParser parser = new RedisProtocolParser(in);
+        RedisCommandParser parser = new RedisCommandParser(in);
+        Method method = RedisCommandParser.class.getSuperclass().getDeclaredMethod("expectByte", byte.class);
         try {
-            parser.expectByte((byte) 'b');
-            assertTrue(false);
-        } catch (EOFException e) {
+            method.invoke(parser, (byte)'b');
+            throw new AssertionError();
+        } catch (Exception e) {
             // OK
         }
     }
 
     @Test
-    public void testConsumeLongError1() {
-        RedisProtocolParser parser = new RedisProtocolParser("\r");
+    public void testConsumeLongError1() throws Exception {
+        setMessage("\r");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumePositiveLong");
+        method.setAccessible(true);
         try {
-            parser.consumePositiveLong();
-            assertTrue(false);
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeLongError2() throws Exception {
+        setMessage("100a");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumePositiveLong");
+        method.setAccessible(true);
+        try {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeLongError3() throws Exception {
+        setMessage("");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumePositiveLong");
+        method.setAccessible(true);
+        try {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeStringError() throws Exception {
+        setMessage("abc");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeSlice", long.class);
+        method.setAccessible(true);
+        try {
+            method.invoke(parse, 4L);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeCountError1() throws Exception {
+        setMessage("$12\r\n");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeCount");
+        method.setAccessible(true);
+        try {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeCountError2() throws Exception {
+        setMessage("*12\ra");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeCount");
+        method.setAccessible(true);
+        try {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeParameterError1() throws Exception{
+        setMessage("$4\r\nabcde\r\n");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeParameter");
+        method.setAccessible(true);
+        try {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeParameterError2() throws Exception {
+        setMessage("$4\r\nabc\r\n");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeParameter");
+        method.setAccessible(true);
+        try {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeParameterError3() throws Exception {
+        setMessage("$4\r\nabc");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeParameter");
+        method.setAccessible(true);
+        try {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testConsumeParameterError4() throws Exception {
+        setMessage("$4\r");
+        Method method = RedisCommandParser.class.getDeclaredMethod("consumeParameter");
+        method.setAccessible(true);
+        try {
+            method.invoke(parse);
+            throw new AssertionError();
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    @Test
+    public void testParseError() throws EOFException {
+        try {
+            RedisCommandParser.parse(getInputStream("*0\r\n"));
+            throw new AssertionError();
         } catch (ParseErrorException e) {
             // OK
         }
     }
 
     @Test
-    public void testConsumeLongError2() {
-        RedisProtocolParser parser = new RedisProtocolParser("100a");
-        try {
-            parser.consumePositiveLong();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testConsumeLongError3() {
-        RedisProtocolParser parser = new RedisProtocolParser("");
-        try {
-            parser.consumePositiveLong();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testConsumeStringError() {
-        RedisProtocolParser parser = new RedisProtocolParser("abc");
-        try {
-            parser.consumeSlice(4);
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testConsumeCountError1() throws EOFException {
-        RedisProtocolParser parser = new RedisProtocolParser("$12\r\n");
-        try {
-            parser.consumeCount();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testConsumeCountError2() throws EOFException {
-        RedisProtocolParser parser = new RedisProtocolParser("*12\ra");
-        try {
-            parser.consumeCount();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testConsumeParameterError1() {
-        RedisProtocolParser parser = new RedisProtocolParser("$4\r\nabcde\r\n");
-        try {
-            parser.consumeParameter();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testConsumeParameterError2() {
-        RedisProtocolParser parser = new RedisProtocolParser("$4\r\nabc\r\n");
-        try {
-            parser.consumeParameter();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testConsumeParameterError3() {
-        RedisProtocolParser parser = new RedisProtocolParser("$4\r\nabc");
-        try {
-            parser.consumeParameter();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testConsumeParameterError4() {
-        RedisProtocolParser parser = new RedisProtocolParser("$4\r");
-        try {
-            parser.consumeParameter();
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testParseError() throws ParseErrorException, EOFException {
-        try {
-            RedisProtocolParser.parseCommand("*0\r\n");
-            assertTrue(false);
-        } catch (ParseErrorException e) {
-            // OK
-        }
-    }
-
-    @Test
-    public void testParseRedis2Lua() throws EOFException, ParseErrorException {
+    public void testParseRedis2Lua() throws ParseErrorException {
 
         String strOK = "+OK\r\n";
         String strPONG = "+PONG\r\n";
@@ -244,16 +315,16 @@ public class TestProtocolParser {
         String strNestArray = "*2\r\n:2\r\n*2\r\n$5\r\nhello\r\n:2\r\n";
         String strNumber = ":1\r\n";
 
-        LuaValue luaOK =  RedisProtocolParser.parseRedis2Lua(new Slice(strOK));
-        LuaValue luaPONG =  RedisProtocolParser.parseRedis2Lua(new Slice(strPONG));
-        LuaValue luaNULL =  RedisProtocolParser.parseRedis2Lua(new Slice(strNULL));
-        LuaValue luaError =  RedisProtocolParser.parseRedis2Lua(new Slice(strError));
-        LuaValue luaString1 =  RedisProtocolParser.parseRedis2Lua(new Slice(strString1));
-        LuaValue luaString2 =  RedisProtocolParser.parseRedis2Lua(new Slice(strString2));
-        LuaValue luaNumber =  RedisProtocolParser.parseRedis2Lua(new Slice(strNumber));
-        LuaValue luaArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strArray));
-        LuaValue luaNullArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strNullArray));
-        LuaValue luaNestArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strNestArray));
+        LuaValue luaOK =  RedisToLuaReplyParser.parse(new Slice(strOK));
+        LuaValue luaPONG =  RedisToLuaReplyParser.parse(new Slice(strPONG));
+        LuaValue luaNULL =  RedisToLuaReplyParser.parse(new Slice(strNULL));
+        LuaValue luaError =  RedisToLuaReplyParser.parse(new Slice(strError));
+        LuaValue luaString1 =  RedisToLuaReplyParser.parse(new Slice(strString1));
+        LuaValue luaString2 =  RedisToLuaReplyParser.parse(new Slice(strString2));
+        LuaValue luaNumber =  RedisToLuaReplyParser.parse(new Slice(strNumber));
+        LuaValue luaArray =  RedisToLuaReplyParser.parse(new Slice(strArray));
+        LuaValue luaNullArray =  RedisToLuaReplyParser.parse(new Slice(strNullArray));
+        LuaValue luaNestArray =  RedisToLuaReplyParser.parse(new Slice(strNestArray));
 
         assertEquals("OK", luaOK.get("ok").checkjstring());
         assertEquals("PONG", luaPONG.get("ok").checkjstring());
@@ -293,26 +364,26 @@ public class TestProtocolParser {
         String strNestArray = "*2\r\n:2\r\n*2\r\n$5\r\nhello\r\n:2\r\n";
         String strNumber = ":1\r\n";
 
-        LuaValue luaOK =  RedisProtocolParser.parseRedis2Lua(new Slice(strOK));
-        LuaValue luaPONG =  RedisProtocolParser.parseRedis2Lua(new Slice(strPONG));
-        LuaValue luaNULL =  RedisProtocolParser.parseRedis2Lua(new Slice(strNULL));
-        LuaValue luaError =  RedisProtocolParser.parseRedis2Lua(new Slice(strError));
-        LuaValue luaString1 =  RedisProtocolParser.parseRedis2Lua(new Slice(strString1));
-        LuaValue luaString2 =  RedisProtocolParser.parseRedis2Lua(new Slice(strString2));
-        LuaValue luaNumber =  RedisProtocolParser.parseRedis2Lua(new Slice(strNumber));
-        LuaValue luaArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strArray));
-        LuaValue luaNullArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strNullArray));
-        LuaValue luaNestArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strNestArray));
+        LuaValue luaOK =  RedisToLuaReplyParser.parse(new Slice(strOK));
+        LuaValue luaPONG =  RedisToLuaReplyParser.parse(new Slice(strPONG));
+        LuaValue luaNULL =  RedisToLuaReplyParser.parse(new Slice(strNULL));
+        LuaValue luaError =  RedisToLuaReplyParser.parse(new Slice(strError));
+        LuaValue luaString1 =  RedisToLuaReplyParser.parse(new Slice(strString1));
+        LuaValue luaString2 =  RedisToLuaReplyParser.parse(new Slice(strString2));
+        LuaValue luaNumber =  RedisToLuaReplyParser.parse(new Slice(strNumber));
+        LuaValue luaArray =  RedisToLuaReplyParser.parse(new Slice(strArray));
+        LuaValue luaNullArray =  RedisToLuaReplyParser.parse(new Slice(strNullArray));
+        LuaValue luaNestArray =  RedisToLuaReplyParser.parse(new Slice(strNestArray));
 
-        assertEquals(strOK, RedisProtocolParser.parseLua2Redis(luaOK).toString());
-        assertEquals(strPONG, RedisProtocolParser.parseLua2Redis(luaPONG).toString());
-        assertEquals(strNULL, RedisProtocolParser.parseLua2Redis(luaNULL).toString());
-        assertEquals(strError, RedisProtocolParser.parseLua2Redis(luaError).toString());
-        assertEquals(strString1, RedisProtocolParser.parseLua2Redis(luaString1).toString());
-        assertEquals(strString2, RedisProtocolParser.parseLua2Redis(luaString2).toString());
-        assertEquals(strArray, RedisProtocolParser.parseLua2Redis(luaArray).toString());
-        assertEquals(strNullArray, RedisProtocolParser.parseLua2Redis(luaNullArray).toString());
-        assertEquals(strNestArray, RedisProtocolParser.parseLua2Redis(luaNestArray).toString());
-        assertEquals(strNumber, RedisProtocolParser.parseLua2Redis(luaNumber).toString());
+        assertEquals(strOK, LuaToRedisReplyParser.parse(luaOK).toString());
+        assertEquals(strPONG, LuaToRedisReplyParser.parse(luaPONG).toString());
+        assertEquals(strNULL, LuaToRedisReplyParser.parse(luaNULL).toString());
+        assertEquals(strError, LuaToRedisReplyParser.parse(luaError).toString());
+        assertEquals(strString1, LuaToRedisReplyParser.parse(luaString1).toString());
+        assertEquals(strString2, LuaToRedisReplyParser.parse(luaString2).toString());
+        assertEquals(strArray, LuaToRedisReplyParser.parse(luaArray).toString());
+        assertEquals(strNullArray, LuaToRedisReplyParser.parse(luaNullArray).toString());
+        assertEquals(strNestArray, LuaToRedisReplyParser.parse(luaNestArray).toString());
+        assertEquals(strNumber, LuaToRedisReplyParser.parse(luaNumber).toString());
     }
 }

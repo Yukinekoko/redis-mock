@@ -2,6 +2,7 @@ package com.github.zxl0714.redismock;
 
 import com.github.zxl0714.redismock.expecptions.EOFException;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import com.github.zxl0714.redismock.parser.RedisCommandParser;
 import com.google.common.base.Preconditions;
 ;
 import java.io.IOException;
@@ -41,7 +42,7 @@ public class RedisWorker implements Runnable {
         int count = 0;
         while (true) {
             try {
-                RedisCommand command = RedisProtocolParser.parseCommand(in);
+                RedisCommand command = RedisCommandParser.parse(in);
                 Slice resp = executor.execCommand(command);
                 out.write(resp.data());
                 out.flush();

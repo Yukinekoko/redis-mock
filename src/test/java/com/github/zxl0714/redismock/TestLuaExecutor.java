@@ -53,24 +53,4 @@ public class TestLuaExecutor {
 
     }
 
-    @Test
-    public void testLuaInput() throws WrongNumberOfArgumentsException {
-        List<Slice> params = new ArrayList<>();
-        Slice script = new Slice("print('hello ' .. KEYS[1])");
-        Slice key = new Slice("0");
-        params.add(script);
-        params.add(key);
-        Scanner sc = new Scanner(System.in);
-        for (int i = 0; i < 5; i++) {
-            script = new Slice(sc.nextLine());
-            params.set(0, script);
-            luaExecutor.execute(params);
-        }
-    }
-
-    public static void main(String[] args) throws WrongNumberOfArgumentsException {
-        TestLuaExecutor testLuaExecutor = new TestLuaExecutor();
-        testLuaExecutor.init();
-        testLuaExecutor.testLuaInput();
-    }
 }
