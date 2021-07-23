@@ -5,7 +5,7 @@ import com.github.zxl0714.redismock.expecptions.ParseErrorException;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.github.zxl0714.redismock.RedisCommandParser.parse;
+import static com.github.zxl0714.redismock.RedisProtocolParser.parseCommand;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -59,23 +59,23 @@ public class TestCommandExecutor {
     }
 
     private void assertCommandEquals(String expect, String command) throws ParseErrorException, EOFException {
-        assertEquals(bulkString(expect), executor.execCommand(parse(command)).toString());
+        assertEquals(bulkString(expect), executor.execCommand(RedisProtocolParser.parseCommand(command)).toString());
     }
 
     private void assertCommandEquals(long expect, String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.integer(expect), executor.execCommand(parse(command)));
+        assertEquals(Response.integer(expect), executor.execCommand(RedisProtocolParser.parseCommand(command)));
     }
 
     private void assertCommandNull(String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.NULL, executor.execCommand(parse(command)));
+        assertEquals(Response.NULL, executor.execCommand(RedisProtocolParser.parseCommand(command)));
     }
 
     private void assertCommandOK(String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.OK, executor.execCommand(parse(command)));
+        assertEquals(Response.OK, executor.execCommand(RedisProtocolParser.parseCommand(command)));
     }
 
     private void assertCommandError(String command) throws ParseErrorException, EOFException {
-        assertEquals('-', executor.execCommand(parse(command)).data()[0]);
+        assertEquals('-', executor.execCommand(RedisProtocolParser.parseCommand(command)).data()[0]);
     }
 
     @Before
@@ -137,9 +137,9 @@ public class TestCommandExecutor {
         assertCommandOK(array("SET", "ab", "abd"));
         assertCommandEquals(-1, array("pttl", "ab"));
         assertCommandEquals(1, array("expire", "ab", "2"));
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(1900L)) > 0);
+        assertTrue(executor.execCommand(RedisProtocolParser.parseCommand(array("pttl", "ab"))).compareTo(Response.integer(1900L)) > 0);
         Thread.sleep(1100);
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(999L)) < 0);
+        assertTrue(executor.execCommand(RedisProtocolParser.parseCommand(array("pttl", "ab"))).compareTo(Response.integer(999L)) < 0);
         Thread.sleep(1000);
         assertCommandEquals(-2, array("pttl", "ab"));
     }
@@ -210,10 +210,10 @@ public class TestCommandExecutor {
         assertCommandEquals(0, array("getbit", "mykey", "6"));
         assertCommandEquals(1, array("setbit", "mykey", "7", "0"));
         assertEquals(Response.bulkString(new Slice(new byte[]{0})),
-                executor.execCommand(parse(array("get", "mykey"))));
+                executor.execCommand(RedisProtocolParser.parseCommand(array("get", "mykey"))));
         assertCommandEquals(0, array("setbit", "mykey", "33", "1"));
         assertEquals(Response.bulkString(new Slice(new byte[]{0, 0, 0, 0, 2})),
-                executor.execCommand(parse(array("get", "mykey"))));
+                executor.execCommand(RedisProtocolParser.parseCommand(array("get", "mykey"))));
         assertCommandEquals(0, array("setbit", "mykey", "22", "1"));
         assertCommandEquals(0, array("getbit", "mykey", "117"));
         assertCommandError(array("getbit", "mykey", "a"));
@@ -234,8 +234,8 @@ public class TestCommandExecutor {
     @Test
     public void testPsetex() throws ParseErrorException, EOFException {
         assertCommandOK(array("pSETex", "ab", "99", "k"));
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(90)) > 0);
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(99)) <= 0);
+        assertTrue(executor.execCommand(RedisProtocolParser.parseCommand(array("pttl", "ab"))).compareTo(Response.integer(90)) > 0);
+        assertTrue(executor.execCommand(RedisProtocolParser.parseCommand(array("pttl", "ab"))).compareTo(Response.integer(99)) <= 0);
         assertCommandError(array("pSETex", "ab", "10a", "k"));
     }
 
@@ -261,7 +261,7 @@ public class TestCommandExecutor {
         assertCommandOK(array("SET", "b", "abd"));
 
         assertEquals(array("abc", "abd", null),
-                executor.execCommand(parse(array("mget", "a", "b", "c"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("mget", "a", "b", "c"))).toString());
     }
 
     @Test
@@ -330,7 +330,7 @@ public class TestCommandExecutor {
         assertCommandEquals(1, array("lpush", "mylist", "!"));
         assertCommandEquals(3, array("lpush", "mylist", "world", "hello"));
         assertEquals(array("hello", "world", "!"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "0", "-1"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("lrange", "mylist", "0", "-1"))).toString());
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("lpush", "a", "1"));
     }
@@ -338,16 +338,16 @@ public class TestCommandExecutor {
     @Test
     public void testLrange() throws ParseErrorException, EOFException {
         assertEquals(array(),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "0", "-1"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("lrange", "mylist", "0", "-1"))).toString());
         assertCommandEquals(3, array("lpush", "mylist", "1", "2", "3"));
         assertEquals(array("3", "2", "1"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "0", "-1"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("lrange", "mylist", "0", "-1"))).toString());
         assertEquals(array("3", "2", "1"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "-10", "10"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("lrange", "mylist", "-10", "10"))).toString());
         assertEquals(array("2"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "1", "-2"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("lrange", "mylist", "1", "-2"))).toString());
         assertEquals(array(),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "10", "-10"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("lrange", "mylist", "10", "-10"))).toString());
         assertCommandError(array("lrange", "mylist", "a", "-1"));
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("lrange", "a", "0", "-1"));
@@ -367,7 +367,7 @@ public class TestCommandExecutor {
         assertCommandEquals(1, array("lpush", "a", "1"));
         assertCommandEquals(2, array("lpushx", "a", "2"));
         assertEquals(array("2", "1"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "a", "0", "-1"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("lrange", "a", "0", "-1"))).toString());
         assertCommandEquals(0, array("lpushx", "b", "1"));
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("lpushx", "a", "1"));
@@ -402,7 +402,7 @@ public class TestCommandExecutor {
         assertCommandEquals(1, array("rpush", "mylist", "!"));
         assertCommandEquals(3, array("rpush", "mylist", "world", "hello"));
         assertEquals(array("!", "world", "hello"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "0", "-1"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("lrange", "mylist", "0", "-1"))).toString());
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("rpush", "a", "1"));
     }
@@ -412,7 +412,7 @@ public class TestCommandExecutor {
         assertCommandOK(array("set", "prefix:a", "a"));
         assertCommandOK(array("set", "prefix:b", "b"));
         assertEquals(array("prefix:a","prefix:b"),
-                executor.execCommand(RedisCommandParser.parse(array("keys", "prefix:*"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("keys", "prefix:*"))).toString());
     }
 
     @Test
@@ -441,21 +441,21 @@ public class TestCommandExecutor {
     @Test
     public void testSubscribe() throws ParseErrorException, EOFException {
         assertEquals(responseArray("subscribe", "channel_1", 1L),
-                executor.execCommand(RedisCommandParser.parse(array("subscribe", "channel_1"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("subscribe", "channel_1"))).toString());
         assertEquals(responseArray("subscribe", "channel_1", 1L),
-                executor.execCommand(RedisCommandParser.parse(array("subscribe", "channel_1"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("subscribe", "channel_1"))).toString());
         assertEquals(responseArray("subscribe", "channel_2", 1L, "subscribe", "channel_3", 2L),
-                executor.execCommand(RedisCommandParser
-                        .parse(array("subscribe", "channel_2", "channel_3"))).toString());
+                executor.execCommand(RedisProtocolParser
+                        .parseCommand(array("subscribe", "channel_2", "channel_3"))).toString());
     }
 
     @Test
     public void testUnsubscribe() throws ParseErrorException, EOFException {
         assertEquals(responseArray("unsubscribe", Response.NULL, 0L),
-                executor.execCommand(RedisCommandParser.parse(array("unsubscribe", "channel_1"))).toString());
+                executor.execCommand(RedisProtocolParser.parseCommand(array("unsubscribe", "channel_1"))).toString());
         assertEquals(responseArray("unsubscribe", Response.NULL, 0L),
                 executor.execCommand(
-                        RedisCommandParser.parse(array("unsubscribe", "channel_1", "c2", "c3"))).toString());
+                        RedisProtocolParser.parseCommand(array("unsubscribe", "channel_1", "c2", "c3"))).toString());
     }
     
 }

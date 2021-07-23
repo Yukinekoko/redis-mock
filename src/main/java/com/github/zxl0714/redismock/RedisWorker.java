@@ -41,7 +41,7 @@ public class RedisWorker implements Runnable {
         int count = 0;
         while (true) {
             try {
-                RedisCommand command = RedisCommandParser.parse(in);
+                RedisCommand command = RedisProtocolParser.parseCommand(in);
                 Slice resp = executor.execCommand(command);
                 out.write(resp.data());
                 out.flush();
