@@ -1,9 +1,12 @@
-package com.github.zxl0714.redismock;
+package com.github.zxl0714.redismock.lua;
 
+import com.github.zxl0714.redismock.RedisBase;
+import com.github.zxl0714.redismock.Slice;
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
@@ -53,7 +56,7 @@ public class LuaExecutor {
 
     }
 
-    public LuaValue execute(List<Slice> params) throws WrongNumberOfArgumentsException {
+    public Varargs execute(List<Slice> params) throws WrongNumberOfArgumentsException {
         checkArgumentsNumberGreater(params, 1);
         CompiledScript compiledScript = null;
         Object result = null;
@@ -100,8 +103,7 @@ public class LuaExecutor {
         } catch (ScriptException e) {
             e.printStackTrace();
         }
-
-        return (LuaValue) result;
+        return (Varargs) result;
     }
 
 }

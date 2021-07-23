@@ -1,9 +1,11 @@
 package com.github.zxl0714.redismock;
 
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
+import com.github.zxl0714.redismock.lua.LuaExecutor;
 import org.junit.Before;
 import org.junit.Test;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,11 +44,13 @@ public class TestLuaExecutor {
         params.add(arg);
         params.add(argb);
 
-        LuaValue result = luaExecutor.execute(params);
-
-        sc = new Slice("return 2");
+        LuaValue result = (LuaValue) luaExecutor.execute(params);
+        System.out.println();
+        sc = new Slice("return 2.3333");
         params.set(0, sc);
-        luaExecutor.execute(params);
+        Varargs args = luaExecutor.execute(params);
+        System.out.println(args.arg1().checkdouble());;
+
     }
 
     @Test

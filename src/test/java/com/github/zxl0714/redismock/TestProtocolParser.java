@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 /**
  * Created by Xiaolu on 2015/4/20.
  */
-public class TestCommandParser {
+public class TestProtocolParser {
 
     @Test
     public void testConsumeCharacter() throws ParseErrorException, EOFException {
@@ -277,5 +277,42 @@ public class TestCommandParser {
         assertEquals("hello", luaNestArray.get(2).get(1).checkjstring());
         assertEquals(2, luaNestArray.get(2).get(2).checkint());
 
+    }
+
+    @Test
+    public void testProtocolParser() throws ParseErrorException {
+
+        String strOK = "+OK\r\n";
+        String strPONG = "+PONG\r\n";
+        String strNULL = "$-1\r\n";
+        String strError = "-ERR message\r\n";
+        String strString1 = "$5\r\nhello\r\n";
+        String strString2 = "$0\r\n";
+        String strArray = "*4\r\n$5\r\nhello\r\n$-1\r\n:2\r\n$2\r\nab\r\n";
+        String strNullArray = "*-1\r\n";
+        String strNestArray = "*2\r\n:2\r\n*2\r\n$5\r\nhello\r\n:2\r\n";
+        String strNumber = ":1\r\n";
+
+        LuaValue luaOK =  RedisProtocolParser.parseRedis2Lua(new Slice(strOK));
+        LuaValue luaPONG =  RedisProtocolParser.parseRedis2Lua(new Slice(strPONG));
+        LuaValue luaNULL =  RedisProtocolParser.parseRedis2Lua(new Slice(strNULL));
+        LuaValue luaError =  RedisProtocolParser.parseRedis2Lua(new Slice(strError));
+        LuaValue luaString1 =  RedisProtocolParser.parseRedis2Lua(new Slice(strString1));
+        LuaValue luaString2 =  RedisProtocolParser.parseRedis2Lua(new Slice(strString2));
+        LuaValue luaNumber =  RedisProtocolParser.parseRedis2Lua(new Slice(strNumber));
+        LuaValue luaArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strArray));
+        LuaValue luaNullArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strNullArray));
+        LuaValue luaNestArray =  RedisProtocolParser.parseRedis2Lua(new Slice(strNestArray));
+
+        assertEquals(strOK, RedisProtocolParser.parseLua2Redis(luaOK).toString());
+        assertEquals(strPONG, RedisProtocolParser.parseLua2Redis(luaPONG).toString());
+        assertEquals(strNULL, RedisProtocolParser.parseLua2Redis(luaNULL).toString());
+        assertEquals(strError, RedisProtocolParser.parseLua2Redis(luaError).toString());
+        assertEquals(strString1, RedisProtocolParser.parseLua2Redis(luaString1).toString());
+        assertEquals(strString2, RedisProtocolParser.parseLua2Redis(luaString2).toString());
+        assertEquals(strArray, RedisProtocolParser.parseLua2Redis(luaArray).toString());
+        assertEquals(strNullArray, RedisProtocolParser.parseLua2Redis(luaNullArray).toString());
+        assertEquals(strNestArray, RedisProtocolParser.parseLua2Redis(luaNestArray).toString());
+        assertEquals(strNumber, RedisProtocolParser.parseLua2Redis(luaNumber).toString());
     }
 }

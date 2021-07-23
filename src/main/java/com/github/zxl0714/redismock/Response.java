@@ -13,6 +13,8 @@ public class Response {
     public static final Slice OK = new Slice("+OK\r\n");
     public static final Slice PONG = new Slice("+PONG\r\n");
     public static final Slice NULL = new Slice("$-1\r\n");
+    public static final Slice EMPTY_LIST = new Slice("*-1\r\n");
+    public static final Slice EMPTY_STRING = new Slice("$0\r\n");
 
     private Response() {}
 
@@ -25,6 +27,10 @@ public class Response {
         bo.write(s.data());
         bo.write("\r\n".getBytes());
         return new Slice(bo.toByteArray());
+    }
+
+    public static Slice status(String s) {
+        return new Slice(String.format("+%s\r\n", s));
     }
 
     public static Slice error(String s) {
