@@ -2,6 +2,7 @@ package com.github.zxl0714.redismock.lua;
 
 import com.github.zxl0714.redismock.*;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import com.github.zxl0714.redismock.expecptions.UnsupportedScriptCommandException;
 import com.github.zxl0714.redismock.parser.RedisToLuaReplyParser;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -9,6 +10,8 @@ import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.VarArgFunction;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.logging.Logger;
 
 /**
@@ -45,7 +48,7 @@ public class RedisLib extends VarArgFunction {
         }
     }
 
-    private Varargs call(Varargs args)  {
+    private Varargs call(Varargs args) {
         CommandExecutor commandExecutor = getCommandExecutor();
         if (commandExecutor == null) {
             LOGGER.warning("can not get commandExecutor");
@@ -55,13 +58,20 @@ public class RedisLib extends VarArgFunction {
         for (int i = 1; i <= args.narg(); i++) {
             command.addParameter(new Slice(args.checkjstring(i)));
         }
-        Slice result = commandExecutor.execCommand(command);
+        Slice result = null;
         try {
+            result = commandExecutor.execCommandFromScript(command);
             return RedisToLuaReplyParser.parse(result);
+        } catch (IOException e) {
+            String message = "redis.call IO error: " + e.getMessage();
+            LOGGER.warning(message);
+            return replyError(message);
         } catch (ParseErrorException e) {
             String message = "redis.call reply parse error: " + result.toString();
             LOGGER.warning(message);
             return replyError(message);
+        } catch (UnsupportedScriptCommandException e) {
+            return replyError("ERR This Redis command is not allowed from scripts");
         }
     }
 

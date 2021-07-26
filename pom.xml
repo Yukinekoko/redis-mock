@@ -28,6 +28,11 @@
             <name>kael-aiur</name>
             <email>kael.peng@gmail.com</email>
         </developer>
+        <developer>
+            <id>snowmeow</id>
+            <name>snowmeow</name>
+            <email>yuki754685421@163.com</email>
+        </developer>
     </developers>
 
     <licenses>
@@ -63,6 +68,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>3.11.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>

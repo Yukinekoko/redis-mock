@@ -1,9 +1,12 @@
-package com.github.zxl0714.redismock.lua;
+package com.github.zxl0714.redismock.executor;
 
+import com.github.zxl0714.redismock.RedisBase;
 import com.github.zxl0714.redismock.Response;
 import com.github.zxl0714.redismock.Slice;
-import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import com.github.zxl0714.redismock.expecptions.BaseException;
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
+import com.github.zxl0714.redismock.lua.RedisLib;
+import com.github.zxl0714.redismock.lua.RedisLuaScriptEngine;
 import com.github.zxl0714.redismock.parser.LuaToRedisReplyParser;
 import org.luaj.vm2.*;
 import org.luaj.vm2.script.LuaScriptEngine;
@@ -12,38 +15,29 @@ import javax.script.Bindings;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
 
-import static com.github.zxl0714.redismock.Utils.*;
+import static com.github.zxl0714.redismock.Utils.checkArgumentsNumberGreater;
 
 /**
- * lua脚本执行器,注意luaj本身可能存在线程不安全问题
- *
  * @author snowmeow(yuki754685421 @ 163.com)
- * @date 2021-7-22
+ * @date 2021/7/26
  */
-public class LuaExecutor {
+public class EVALExecutor extends AbstractExecutor {
 
-    private static final LuaScriptEngine engine;
+    private static final RedisLuaScriptEngine engine = new RedisLuaScriptEngine();
 
-    static {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        engine = (LuaScriptEngine) manager.getEngineByExtension(".lua");
-
-        LuaTable luaEnvironment = (LuaTable) LuaThread.getGlobals();
-        luaEnvironment.load(new RedisLib());
-    }
-
-    public Slice execute(List<Slice> params) throws WrongNumberOfArgumentsException, ParseErrorException {
+    @Override
+    public Slice execute(List<Slice> params, RedisBase base, Socket socket) throws BaseException, IOException {
         checkArgumentsNumberGreater(params, 1);
         CompiledScript compiledScript;
         int keyCount;
         try {
             keyCount = Integer.parseInt(params.get(1).toString());
         } catch (NumberFormatException e) {
-            // error
-            e.printStackTrace();
-            return null;
+            throw new WrongNumberOfArgumentsException();
         }
         checkArgumentsNumberGreater(params, 1 + keyCount);
 
@@ -82,5 +76,4 @@ public class LuaExecutor {
         }
         return LuaToRedisReplyParser.parse((scriptResult).arg1());
     }
-
 }

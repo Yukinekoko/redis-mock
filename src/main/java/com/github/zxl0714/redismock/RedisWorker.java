@@ -9,11 +9,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.logging.Logger;
 
 /**
  * Created by Xiaolu on 2015/4/18.
  */
 public class RedisWorker implements Runnable {
+
+    private static final Logger LOGGER = Logger.getLogger(RedisWorker.class.getName());
 
     private final CommandExecutor executor;
     private final Socket socket;
@@ -44,7 +47,7 @@ public class RedisWorker implements Runnable {
         while (true) {
             try {
                 RedisCommand command = RedisCommandParser.parse(in);
-                Slice resp = executor.execCommand(command);
+                Slice resp = executor.execCommand(command, socket);
                 out.write(resp.data());
                 out.flush();
                 count++;
@@ -53,7 +56,6 @@ public class RedisWorker implements Runnable {
                     break;
                 }
             } catch (IOException e) {
-                // Do nothing
                 break;
             } catch (ParseErrorException e) {
                 // TODO return error
