@@ -54,7 +54,6 @@ public class TestCommandEVAL {
         assertEquals(bulkString("wss"), execute("return redis.call('get', 'cc')", "0"));
     }
 
-
     private Slice execute(String... params) {
         try {
             return executor.execute(params(params), redisBase, socket);

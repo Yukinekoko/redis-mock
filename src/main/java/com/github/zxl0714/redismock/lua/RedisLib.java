@@ -2,6 +2,7 @@ package com.github.zxl0714.redismock.lua;
 
 import com.github.zxl0714.redismock.*;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import com.github.zxl0714.redismock.expecptions.RedisCallCommandException;
 import com.github.zxl0714.redismock.expecptions.UnsupportedScriptCommandException;
 import com.github.zxl0714.redismock.parser.RedisToLuaReplyParser;
 import org.luaj.vm2.LuaTable;
@@ -43,12 +44,44 @@ public class RedisLib extends VarArgFunction {
                 return init();
             case CALL:
                 return call(args);
+            case PCALL:
+                return pcall(args);
             default:
                 return NONE;
         }
     }
 
     private Varargs call(Varargs args) {
+        CommandExecutor commandExecutor = getCommandExecutor();
+        if (commandExecutor == null) {
+            LOGGER.warning("can not get commandExecutor");
+            return replyError("can not get commandExecutor");
+        }
+        RedisCommand command = new RedisCommand();
+        for (int i = 1; i <= args.narg(); i++) {
+            command.addParameter(new Slice(args.checkjstring(i)));
+        }
+        Slice result = null;
+        try {
+            result = commandExecutor.execCommandFromScript(command);
+            if (result.data()[0] == '-') {
+                throw new RedisCallCommandException(new String(result.data(), 1, result.length() - 1));
+            }
+            return RedisToLuaReplyParser.parse(result);
+        } catch (IOException e) {
+            String message = "redis.call IO error: " + e.getMessage();
+            LOGGER.warning(message);
+            throw new RedisCallCommandException(message);
+        } catch (ParseErrorException e) {
+            String message = "redis.call reply parse error: " + result.toString();
+            LOGGER.warning(message);
+            throw new RedisCallCommandException(message);
+        } catch (UnsupportedScriptCommandException e) {
+            throw new RedisCallCommandException("ERR This Redis command is not allowed from scripts");
+        }
+    }
+
+    private Varargs pcall(Varargs args) {
         CommandExecutor commandExecutor = getCommandExecutor();
         if (commandExecutor == null) {
             LOGGER.warning("can not get commandExecutor");

@@ -4,6 +4,7 @@ import com.github.zxl0714.redismock.RedisBase;
 import com.github.zxl0714.redismock.Response;
 import com.github.zxl0714.redismock.Slice;
 import com.github.zxl0714.redismock.expecptions.BaseException;
+import com.github.zxl0714.redismock.expecptions.RedisCallCommandException;
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
 import com.github.zxl0714.redismock.lua.RedisLib;
 import com.github.zxl0714.redismock.lua.RedisLuaScriptEngine;
@@ -73,6 +74,8 @@ public class EVALExecutor extends AbstractExecutor {
             scriptResult = (Varargs) compiledScript.eval(bindings);
         } catch (ScriptException | LuaError e) {
             return Response.error("ERR " +e.getMessage());
+        } catch (RedisCallCommandException e) {
+            return Response.error(e.getMessage());
         }
         return LuaToRedisReplyParser.parse((scriptResult).arg1());
     }

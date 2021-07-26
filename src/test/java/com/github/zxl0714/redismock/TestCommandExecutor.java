@@ -125,6 +125,7 @@ public class TestCommandExecutor {
         SocketAttributes socketAttributes = new SocketAttributes();
         socketAttributes.setDatabaseIndex(0);
         socketAttributes.setSocket(socket);
+        socketAttributes.setCommandExecutor(executor);
         SocketContextHolder.setSocketAttributes(socketAttributes);
 
     }
@@ -504,6 +505,12 @@ public class TestCommandExecutor {
     public void testEval() throws ParseErrorException, EOFException, IOException, UnsupportedScriptCommandException {
         assertEquals(Response.PONG,
             executor.execCommand(parse(array("ping", "return redis.call('ping')", "0")), socket));
+
+        assertCommandEquals("abc", array("eval", "redis.pcall('set'); return 'abc'", "0"));
+        assertCommandError(array("eval", "redis.call('set'); return 'abc'", "0"));
+        assertCommandError(array("eval", "redis.call('quit'); return 'abc'", "0"));
+
+
     }
     
 }
