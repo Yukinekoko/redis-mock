@@ -153,11 +153,18 @@ public class CommandExecutor {
         private final Executor executor;
         /** 能否在lua脚本中被执行 */
         private final boolean script;
+        /** 能否在从节点中运行 */
+        private final boolean slave;
 
         public CommandDescriptor(String name, Executor executor, boolean script) {
+            this(name, executor, script, true);
+        }
+
+        public CommandDescriptor(String name, Executor executor, boolean script, boolean slave) {
             this.name = name;
             this.script = script;
             this.executor = executor;
+            this.slave = slave;
         }
     }
 

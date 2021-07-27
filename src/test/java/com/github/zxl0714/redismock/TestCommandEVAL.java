@@ -131,6 +131,38 @@ public class TestCommandEVAL {
         assertCommandError(array("eval", "return redis.sha1hex()", "0"));
     }
 
+    @Test
+    public void testBitopLib() throws ParseErrorException, EOFException, IOException {
+        // tobit
+        assertCommandEquals(255, array("eval", "return bit.tobit(0xff)", "0"));
+        assertCommandEquals(-1, array("eval", "return bit.tobit(0xffffffff)", "0"));
+        assertCommandEquals(0, array("eval", "return bit.tobit(0xffffffff+1)", "0"));
+        assertCommandEquals(0, array("eval", "return bit.tobit(0xffffffffff+1)", "0"));
+        assertCommandEquals(0, array("eval", "return bit.tobit(0xffffffffff+1, 0xff)", "0"));
+        assertCommandEquals(2, array("eval", "return bit.tobit(2.33)", "0"));
+        assertCommandError(array("eval", "return bit.tobit()", "0"));
+        assertCommandError(array("eval", "return bit.tobit(0xff, 'abc')", "0"));
+        assertCommandError(array("eval", "return bit.tobit('aaa')", "0"));
+        // tohex
+        assertCommandEquals("00000001", array("eval", "return bit.tohex(1.33)", "0"));
+        assertCommandEquals("00000002", array("eval", "return bit.tohex(2)", "0"));
+        assertCommandEquals("7fffffff", array("eval", "return bit.tohex(2147483647)", "0"));
+        assertCommandEquals("80000001", array("eval", "return bit.tohex(-2147483647)", "0"));
+        assertCommandEquals("80000000", array("eval", "return bit.tohex(-2147483648)", "0"));
+        assertCommandEquals("80000002", array("eval", "return bit.tohex(2147483648)", "0"));
+        assertCommandEquals("80000000", array("eval", "return bit.tohex(2147483650)", "0"));
+
+        // bnot
+        assertCommandEquals(-1, array("eval", "return bit.bnot(0)", "0"));
+        assertCommandEquals(0, array("eval", "return bit.bnot(-1)", "0"));
+        assertCommandEquals(-123124, array("eval", "return bit.bnot(123123)", "0"));
+    }
+
+    @Test
+    public void testStructLib() throws ParseErrorException, EOFException, IOException {
+        System.out.println(executor.execCommand(parse(array("eval", "print(struct.pack('i', 11))", "0")), socket));
+    }
+
     private static String bulkString(CharSequence param) {
         return "$" + param.length() + CRLF + param.toString() + CRLF;
     }

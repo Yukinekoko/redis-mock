@@ -5,10 +5,7 @@ import com.github.zxl0714.redismock.Slice;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.luaj.vm2.LuaError;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
+import org.luaj.vm2.*;
 
 import java.util.List;
 import java.util.Map;
@@ -28,9 +25,9 @@ public class LuaToRedisReplyParser {
      * @return 转换后的Redis响应
      * */
     public static Slice parse(LuaValue arg) throws ParseErrorException {
-        if (arg.isnumber()) {
-            return Response.integer(arg.toint());
-        } else if (arg.isstring()) {
+        if (arg instanceof LuaNumber) {
+            return Response.integer(arg.tolong());
+        } else if (arg instanceof LuaString) {
             String str = arg.tojstring();
             if (str.isEmpty()) {
                 return Response.EMPTY_STRING;
@@ -60,9 +57,9 @@ public class LuaToRedisReplyParser {
             if ((k = n.arg1()).isnil())
                 break;
             LuaValue v = n.arg(2);
-            if (k.isint()) {
+            if (k instanceof LuaNumber) {
                 map.put(k.toint(), v);
-            } else if (k.isstring()) {
+            } else if (k instanceof LuaString) {
                 map.put(k.tojstring(), v);
             } else {
                 LOGGER.warning("lua table 中出现了错误的key格式： " + k.typename());

@@ -31,7 +31,6 @@ public class TestLuaToRedisReplyParser {
         String strNestArray = "*2\r\n:2\r\n*2\r\n$5\r\nhello\r\n:2\r\n";
         String strNumber = ":1\r\n";
 
-
         LuaValue luaOK =  new LuaTable();
         luaOK.set("ok", LuaValue.valueOf("OK"));
         LuaTable luaPONG = new LuaTable();
@@ -65,12 +64,15 @@ public class TestLuaToRedisReplyParser {
         assertEquals(strNullArray, LuaToRedisReplyParser.parse(luaNullArray).toString());
         assertEquals(strNestArray, LuaToRedisReplyParser.parse(luaNestArray).toString());
         assertEquals(strNumber, LuaToRedisReplyParser.parse(luaNumber).toString());
+        assertEquals("$5\r\n00001\r\n", LuaToRedisReplyParser.parse(LuaValue.valueOf("00001")).toString());
+        assertEquals(":-9223372036854775808\r\n", LuaToRedisReplyParser.parse(LuaValue.valueOf(-9223372036854775808L)).toString());
     }
 
     @Test
     public void testDoubleParser() throws ParseErrorException {
         LuaValue value = LuaValue.valueOf(3.6633);
         assertEquals(":3\r\n", LuaToRedisReplyParser.parse(value).toString());
+
     }
 
     @Test

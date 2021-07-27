@@ -51,6 +51,8 @@ public class RedisLuaScriptEngine implements ScriptEngine, Compilable {
         // _G.load(new JseOsLib());
         // _G.load(new LuajavaLib());
         _G.load(new RedisLib());
+        _G.load(new BitopLib());
+        _G.load(new StructLib());
         LuaThread.setGlobals(_G);
         LuaC.install();
 
