@@ -6,15 +6,12 @@ import com.github.zxl0714.redismock.Slice;
 import com.github.zxl0714.redismock.expecptions.BaseException;
 import com.github.zxl0714.redismock.expecptions.RedisCallCommandException;
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
-import com.github.zxl0714.redismock.lua.RedisLib;
 import com.github.zxl0714.redismock.lua.RedisLuaScriptEngine;
 import com.github.zxl0714.redismock.parser.LuaToRedisReplyParser;
 import org.luaj.vm2.*;
-import org.luaj.vm2.script.LuaScriptEngine;
 
 import javax.script.Bindings;
 import javax.script.CompiledScript;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.IOException;
 import java.net.Socket;
@@ -62,12 +59,8 @@ public class EVALExecutor extends AbstractExecutor {
         LuaTable keyTable = LuaValue.tableOf(keys);
         LuaTable argTable = LuaValue.tableOf(args);
         Bindings bindings = engine.createBindings();
-        if (keys.length != 0) {
-            bindings.put("KEYS", keyTable);
-        }
-        if (args.length != 0) {
-            bindings.put("ARGV", argTable);
-        }
+        bindings.put("KEYS", keyTable);
+        bindings.put("ARGV", argTable);
         Varargs scriptResult;
         try {
             compiledScript = engine.compile(params.get(0).toString());
