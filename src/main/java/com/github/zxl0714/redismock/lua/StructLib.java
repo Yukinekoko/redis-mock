@@ -54,26 +54,8 @@ public class StructLib extends VarArgFunction {
     }
 
     private Varargs pack(Varargs args) {
-        String expression = args.arg1().checkjstring();
-        int index = 2;
-        StringBuilder response = new StringBuilder();
-
-        char temp = expression.charAt(0);
-        switch (temp) {
-            case 'i':
-                char[] buff = new char[32];
-                int number = args.arg(index).checkint();
-                for (int i = 0; i < 8; i++) {
-                    buff[i] = (char) (number & 0xff);
-                    number >>= 8;
-                }
-                response.append(buff);
-                break;
-            default:
-                LOGGER.warning("error");
-        }
-
-        return LuaValue.valueOf(response.toString());
+        StructHandler handler = new StructHandler(args);
+        return LuaValue.valueOf(handler.pack());
     }
 
     private Varargs unpack(Varargs args) {

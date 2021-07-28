@@ -131,7 +131,7 @@ public class TestCommandEVAL {
         assertCommandError(array("eval", "return redis.sha1hex()", "0"));
     }
 
-    @Test
+    // @Test
     public void testBitopLib() throws ParseErrorException, EOFException, IOException {
         // tobit
         assertCommandEquals(255, array("eval", "return bit.tobit(0xff)", "0"));
@@ -160,7 +160,25 @@ public class TestCommandEVAL {
 
     @Test
     public void testStructLib() throws ParseErrorException, EOFException, IOException {
-        System.out.println(executor.execCommand(parse(array("eval", "print(struct.pack('i', 11))", "0")), socket));
+        assertCommandEquals(hex2string("68656c6c6f00000000000001"),
+            array("eval", "return struct.pack('>!32c5i', 'hello world', 1)", "0"));
+
+        // error
+        assertCommandError(array("eval", "return struct.pack('>!5c5i', 'hello world', 1)", "0"));
+        assertCommandError(array("eval", "return struct.pack('>!asdsasqw5c5i', 'hello world', 1)", "0"));
+        assertCommandError(array("eval", "return struct.pack('>!5c5i', 'hello world', 1)", "0"));
+    }
+
+    private static String hex2string(String hexString) {
+
+        String e = "0123456789abcdef";
+        byte[] buff = new byte[hexString.length() / 2];
+        for (int i = 0; i < hexString.length() / 2; i++) {
+            byte b1 = (byte) (e.indexOf(hexString.charAt(i * 2)) << 4);
+            byte b2 = (byte) e.indexOf((hexString.charAt(i * 2 + 1)));
+            buff[i] = (byte) (b1 | b2);
+        }
+        return new String(buff);
     }
 
     private static String bulkString(CharSequence param) {
