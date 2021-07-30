@@ -11,8 +11,6 @@ public class RedisCommand {
 
     private List<Slice> params = Lists.newArrayList();
 
-    RedisCommand() {}
-
     public void addParameter(Slice token) {
         this.params.add(token);
     }

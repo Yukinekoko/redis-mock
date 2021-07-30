@@ -25,6 +25,8 @@ public class RedisService implements Runnable {
         this.options = options;
     }
 
+
+    @Override
     public void run() {
         while (!server.isClosed()) {
             try {

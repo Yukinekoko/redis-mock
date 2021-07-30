@@ -2,12 +2,19 @@ package com.github.zxl0714.redismock;
 
 import com.github.zxl0714.redismock.expecptions.EOFException;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import com.github.zxl0714.redismock.expecptions.UnsupportedScriptCommandException;
+import com.github.zxl0714.redismock.parser.RedisCommandParser;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.github.zxl0714.redismock.RedisCommandParser.parse;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by Xiaolu on 2015/4/20.
@@ -15,7 +22,12 @@ import static org.junit.Assert.assertTrue;
 public class TestCommandExecutor {
 
     private static final String CRLF = "\r\n";
+    
     private static CommandExecutor executor;
+    
+    private Socket socket;
+    
+    private ByteArrayOutputStream outputStream;
 
     private static String bulkString(CharSequence param) {
         return "$" + param.length() + CRLF + param.toString() + CRLF;
@@ -58,32 +70,64 @@ public class TestCommandExecutor {
         return builder.toString();
     }
 
+    private RedisCommand parse(String command) throws ParseErrorException, EOFException {
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(command.getBytes());
+        return RedisCommandParser.parse(inputStream);
+    }
+
     private void assertCommandEquals(String expect, String command) throws ParseErrorException, EOFException {
-        assertEquals(bulkString(expect), executor.execCommand(parse(command)).toString());
+        try {
+            assertEquals(bulkString(expect), executor.execCommand(parse(command), socket).toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void assertCommandEquals(long expect, String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.integer(expect), executor.execCommand(parse(command)));
+        try {
+            assertEquals(Response.integer(expect), executor.execCommand(parse(command), socket));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void assertCommandNull(String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.NULL, executor.execCommand(parse(command)));
+        try {
+            assertEquals(Response.NULL, executor.execCommand(parse(command), socket));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void assertCommandOK(String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.OK, executor.execCommand(parse(command)));
+        try {
+            assertEquals(Response.OK, executor.execCommand(parse(command), socket));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void assertCommandError(String command) throws ParseErrorException, EOFException {
-        assertEquals('-', executor.execCommand(parse(command)).data()[0]);
+        try {
+            assertEquals('-', executor.execCommand(parse(command), socket).data()[0]);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Before
-    public void initCommandExecutor() {
+    public void initCommandExecutor() throws IOException {
         executor = new CommandExecutor(new RedisBase());
+        Socket socket = mock(Socket.class);
+        outputStream = new ByteArrayOutputStream();
+        when(socket.getOutputStream()).thenReturn(outputStream);
+
         SocketAttributes socketAttributes = new SocketAttributes();
         socketAttributes.setDatabaseIndex(0);
+        socketAttributes.setSocket(socket);
+        socketAttributes.setCommandExecutor(executor);
         SocketContextHolder.setSocketAttributes(socketAttributes);
+
     }
 
     @Test
@@ -132,14 +176,14 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testPTTL() throws ParseErrorException, InterruptedException, EOFException {
+    public void testPTTL() throws ParseErrorException, InterruptedException, EOFException, IOException {
         assertCommandEquals(-2, array("pttl", "ab"));
         assertCommandOK(array("SET", "ab", "abd"));
         assertCommandEquals(-1, array("pttl", "ab"));
         assertCommandEquals(1, array("expire", "ab", "2"));
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(1900L)) > 0);
+        assertTrue(executor.execCommand(parse(array("pttl", "ab")), socket).compareTo(Response.integer(1900L)) > 0);
         Thread.sleep(1100);
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(999L)) < 0);
+        assertTrue(executor.execCommand(parse(array("pttl", "ab")), socket).compareTo(Response.integer(999L)) < 0);
         Thread.sleep(1000);
         assertCommandEquals(-2, array("pttl", "ab"));
     }
@@ -203,17 +247,17 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testSetAndGetBit() throws ParseErrorException, EOFException {
+    public void testSetAndGetBit() throws ParseErrorException, EOFException, IOException {
         assertCommandEquals(0, array("getbit", "mykey", "7"));
         assertCommandEquals(0, array("setbit", "mykey", "7", "1"));
         assertCommandEquals(1, array("getbit", "mykey", "7"));
         assertCommandEquals(0, array("getbit", "mykey", "6"));
         assertCommandEquals(1, array("setbit", "mykey", "7", "0"));
         assertEquals(Response.bulkString(new Slice(new byte[]{0})),
-                executor.execCommand(parse(array("get", "mykey"))));
+                executor.execCommand(parse(array("get", "mykey")), socket));
         assertCommandEquals(0, array("setbit", "mykey", "33", "1"));
         assertEquals(Response.bulkString(new Slice(new byte[]{0, 0, 0, 0, 2})),
-                executor.execCommand(parse(array("get", "mykey"))));
+                executor.execCommand(parse(array("get", "mykey")), socket));
         assertCommandEquals(0, array("setbit", "mykey", "22", "1"));
         assertCommandEquals(0, array("getbit", "mykey", "117"));
         assertCommandError(array("getbit", "mykey", "a"));
@@ -232,10 +276,10 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testPsetex() throws ParseErrorException, EOFException {
+    public void testPsetex() throws ParseErrorException, EOFException, IOException {
         assertCommandOK(array("pSETex", "ab", "99", "k"));
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(90)) > 0);
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(99)) <= 0);
+        assertTrue(executor.execCommand(parse(array("pttl", "ab")), socket).compareTo(Response.integer(90)) > 0);
+        assertTrue(executor.execCommand(parse(array("pttl", "ab")), socket).compareTo(Response.integer(99)) <= 0);
         assertCommandError(array("pSETex", "ab", "10a", "k"));
     }
 
@@ -256,12 +300,12 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testMget() throws ParseErrorException, EOFException {
+    public void testMget() throws ParseErrorException, EOFException, IOException {
         assertCommandOK(array("SET", "a", "abc"));
         assertCommandOK(array("SET", "b", "abd"));
 
         assertEquals(array("abc", "abd", null),
-                executor.execCommand(parse(array("mget", "a", "b", "c"))).toString());
+                executor.execCommand(parse(array("mget", "a", "b", "c")), socket).toString());
     }
 
     @Test
@@ -326,28 +370,28 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testLpush() throws ParseErrorException, EOFException {
+    public void testLpush() throws ParseErrorException, EOFException, IOException {
         assertCommandEquals(1, array("lpush", "mylist", "!"));
         assertCommandEquals(3, array("lpush", "mylist", "world", "hello"));
         assertEquals(array("hello", "world", "!"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "0", "-1"))).toString());
+                executor.execCommand(parse(array("lrange", "mylist", "0", "-1")), socket).toString());
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("lpush", "a", "1"));
     }
 
     @Test
-    public void testLrange() throws ParseErrorException, EOFException {
+    public void testLrange() throws ParseErrorException, EOFException, IOException {
         assertEquals(array(),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "0", "-1"))).toString());
+                executor.execCommand(parse(array("lrange", "mylist", "0", "-1")), socket).toString());
         assertCommandEquals(3, array("lpush", "mylist", "1", "2", "3"));
         assertEquals(array("3", "2", "1"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "0", "-1"))).toString());
+                executor.execCommand(parse(array("lrange", "mylist", "0", "-1")), socket).toString());
         assertEquals(array("3", "2", "1"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "-10", "10"))).toString());
+                executor.execCommand(parse(array("lrange", "mylist", "-10", "10")), socket).toString());
         assertEquals(array("2"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "1", "-2"))).toString());
+                executor.execCommand(parse(array("lrange", "mylist", "1", "-2")), socket).toString());
         assertEquals(array(),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "10", "-10"))).toString());
+                executor.execCommand(parse(array("lrange", "mylist", "10", "-10")), socket).toString());
         assertCommandError(array("lrange", "mylist", "a", "-1"));
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("lrange", "a", "0", "-1"));
@@ -363,11 +407,11 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testLpushx() throws ParseErrorException, EOFException {
+    public void testLpushx() throws ParseErrorException, EOFException, IOException {
         assertCommandEquals(1, array("lpush", "a", "1"));
         assertCommandEquals(2, array("lpushx", "a", "2"));
         assertEquals(array("2", "1"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "a", "0", "-1"))).toString());
+                executor.execCommand(parse(array("lrange", "a", "0", "-1")), socket).toString());
         assertCommandEquals(0, array("lpushx", "b", "1"));
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("lpushx", "a", "1"));
@@ -398,21 +442,21 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testRpush() throws ParseErrorException, EOFException {
+    public void testRpush() throws ParseErrorException, EOFException, IOException {
         assertCommandEquals(1, array("rpush", "mylist", "!"));
         assertCommandEquals(3, array("rpush", "mylist", "world", "hello"));
         assertEquals(array("!", "world", "hello"),
-                executor.execCommand(RedisCommandParser.parse(array("lrange", "mylist", "0", "-1"))).toString());
+                executor.execCommand(parse(array("lrange", "mylist", "0", "-1")), socket).toString());
         assertCommandOK(array("set", "a", "v"));
         assertCommandError(array("rpush", "a", "1"));
     }
 
     @Test
-    public void testKeys() throws ParseErrorException, EOFException {
+    public void testKeys() throws ParseErrorException, EOFException, IOException {
         assertCommandOK(array("set", "prefix:a", "a"));
         assertCommandOK(array("set", "prefix:b", "b"));
         assertEquals(array("prefix:a","prefix:b"),
-                executor.execCommand(RedisCommandParser.parse(array("keys", "prefix:*"))).toString());
+                executor.execCommand(parse(array("keys", "prefix:*")), socket).toString());
     }
 
     @Test
@@ -426,8 +470,10 @@ public class TestCommandExecutor {
         assertCommandEquals("base3", array("GET", "ab"));
         assertCommandOK(array("select", "0"));
         assertCommandEquals("abc", array("GET", "ab"));
+        // error
         assertCommandError(array("select", "20"));
         assertCommandError(array("select", "-10"));
+        assertCommandError(array("select", "abc"));
     }
 
     @Test
@@ -437,23 +483,34 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testSubscribe() throws ParseErrorException, EOFException {
+    public void testSubscribe() throws ParseErrorException, EOFException, IOException {
         assertEquals(responseArray("subscribe", "channel_1", 1L),
-                executor.execCommand(RedisCommandParser.parse(array("subscribe", "channel_1"))).toString());
+                executor.execCommand(parse(array("subscribe", "channel_1")), socket).toString());
         assertEquals(responseArray("subscribe", "channel_1", 1L),
-                executor.execCommand(RedisCommandParser.parse(array("subscribe", "channel_1"))).toString());
+                executor.execCommand(parse(array("subscribe", "channel_1")), socket).toString());
         assertEquals(responseArray("subscribe", "channel_2", 1L, "subscribe", "channel_3", 2L),
-                executor.execCommand(RedisCommandParser
-                        .parse(array("subscribe", "channel_2", "channel_3"))).toString());
+                executor.execCommand(parse(array("subscribe", "channel_2", "channel_3")), socket).toString());
     }
 
     @Test
-    public void testUnsubscribe() throws ParseErrorException, EOFException {
+    public void testUnsubscribe() throws ParseErrorException, EOFException, IOException {
         assertEquals(responseArray("unsubscribe", Response.NULL, 0L),
-                executor.execCommand(RedisCommandParser.parse(array("unsubscribe", "channel_1"))).toString());
+                executor.execCommand(parse(array("unsubscribe", "channel_1")), socket).toString());
         assertEquals(responseArray("unsubscribe", Response.NULL, 0L),
                 executor.execCommand(
-                        RedisCommandParser.parse(array("unsubscribe", "channel_1", "c2", "c3"))).toString());
+                        parse(array("unsubscribe", "channel_1", "c2", "c3")), socket).toString());
+    }
+
+    @Test
+    public void testEval() throws ParseErrorException, EOFException, IOException, UnsupportedScriptCommandException {
+        assertEquals(Response.PONG,
+            executor.execCommand(parse(array("ping", "return redis.call('ping')", "0")), socket));
+
+        assertCommandEquals("abc", array("eval", "redis.pcall('set'); return 'abc'", "0"));
+        assertCommandError(array("eval", "redis.call('set'); return 'abc'", "0"));
+        assertCommandError(array("eval", "redis.call('quit'); return 'abc'", "0"));
+
+
     }
     
 }

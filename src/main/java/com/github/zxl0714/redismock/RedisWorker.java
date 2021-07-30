@@ -2,17 +2,21 @@ package com.github.zxl0714.redismock;
 
 import com.github.zxl0714.redismock.expecptions.EOFException;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import com.github.zxl0714.redismock.parser.RedisCommandParser;
 import com.google.common.base.Preconditions;
 ;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.logging.Logger;
 
 /**
  * Created by Xiaolu on 2015/4/18.
  */
 public class RedisWorker implements Runnable {
+
+    private static final Logger LOGGER = Logger.getLogger(RedisWorker.class.getName());
 
     private final CommandExecutor executor;
     private final Socket socket;
@@ -32,16 +36,18 @@ public class RedisWorker implements Runnable {
         this.out = socket.getOutputStream();
     }
 
+    @Override
     public void run() {
         SocketAttributes socketAttributes = new SocketAttributes();
         socketAttributes.setSocket(socket);
         socketAttributes.setDatabaseIndex(0);
+        socketAttributes.setCommandExecutor(executor);
         SocketContextHolder.setSocketAttributes(socketAttributes);
         int count = 0;
         while (true) {
             try {
                 RedisCommand command = RedisCommandParser.parse(in);
-                Slice resp = executor.execCommand(command);
+                Slice resp = executor.execCommand(command, socket);
                 out.write(resp.data());
                 out.flush();
                 count++;
@@ -50,7 +56,6 @@ public class RedisWorker implements Runnable {
                     break;
                 }
             } catch (IOException e) {
-                // Do nothing
                 break;
             } catch (ParseErrorException e) {
                 // TODO return error

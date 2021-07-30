@@ -18,7 +18,7 @@ public class TestUtils {
 
     @Test
     public void testAvailableCommands() {
-        System.out.println(CommandExecutor.getSupportedCommands());
+        System.out.println(new CommandExecutor(null).getSupportedCommands());
     }
 
     @Test

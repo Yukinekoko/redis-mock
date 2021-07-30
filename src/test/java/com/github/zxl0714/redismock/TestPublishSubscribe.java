@@ -38,7 +38,7 @@ public class TestPublishSubscribe {
         flag = new AtomicInteger(0);
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testPubSub() throws InterruptedException {
         Thread subscribeThread = new Thread(new Runnable() {
             @Override
@@ -61,7 +61,7 @@ public class TestPublishSubscribe {
         }
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testMultiplePubSub() throws InterruptedException {
         Thread subscribeThreadA = new Thread(new Runnable() {
             @Override
@@ -93,8 +93,8 @@ public class TestPublishSubscribe {
 
     public void testMultiplePublish() {
         Jedis jedis = new Jedis(redisServer.getHost(), redisServer.getBindPort());
-        assertEquals(new Long(2), jedis.publish("multiple_1", "Hello World"));
-        assertEquals(new Long(0), jedis.publish("multiple_2", "Hello World"));
+        assertEquals(new Long(2), jedis.publish("channel_1", "Hello World"));
+        assertEquals(new Long(0), jedis.publish("channel_2", "Hello World"));
         jedis.disconnect();
     }
 
@@ -103,7 +103,7 @@ public class TestPublishSubscribe {
         jedis.subscribe(new JedisPubSub() {
             @Override
             public void onMessage(String channel, String message) {
-                assertEquals("multiple_1", channel);
+                assertEquals("channel_1", channel);
                 assertEquals("Hello World", message);
                 flag.incrementAndGet();
                 unsubscribe();
@@ -111,10 +111,10 @@ public class TestPublishSubscribe {
 
             @Override
             public void onSubscribe(String channel, int subscribedChannels) {
-                assertEquals("multiple_1", channel);
+                assertEquals("channel_1", channel);
                 assertEquals(1, subscribedChannels);
             }
-        }, "multiple_1");
+        }, "channel_1");
         jedis.disconnect();
     }
 

@@ -1,58 +1,32 @@
-package com.github.zxl0714.redismock;
+package com.github.zxl0714.redismock.parser;
 
+import com.github.zxl0714.redismock.RedisCommand;
+import com.github.zxl0714.redismock.Slice;
 import com.github.zxl0714.redismock.expecptions.EOFException;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Logger;
 
 /**
  * Created by Xiaolu on 2015/4/20.
  */
-public class RedisCommandParser {
+public class RedisCommandParser extends AbstractParser {
 
-    private final InputStream messageInput;
+    private static final Logger LOGGER = Logger.getLogger(RedisCommandParser.class.getName());
 
-    @VisibleForTesting
-    RedisCommandParser(String stringInput) {
-        this(new ByteArrayInputStream(stringInput.getBytes()));
+    public RedisCommandParser(InputStream messageInput) {
+        super(messageInput);
+
     }
 
-    @VisibleForTesting
-    RedisCommandParser(InputStream messageInput) {
-        Preconditions.checkNotNull(messageInput);
-
-        this.messageInput = messageInput;
-    }
-
-    @VisibleForTesting
-    byte consumeByte() throws EOFException {
-        int b;
-        try {
-            b = messageInput.read();
-        } catch (IOException e) {
-            throw new EOFException();
-        }
-        if (b == -1) {
-            throw new EOFException();
-        }
-        return (byte) b;
-    }
-
-    @VisibleForTesting
-    void expectByte(byte c) throws ParseErrorException, EOFException {
-        if (consumeByte() != c) {
-            throw new ParseErrorException();
-        }
-    }
-
-    @VisibleForTesting
-    long consumeLong() throws ParseErrorException {
+    /**
+     * 读取的byte中只能出现数字，在parseCommand()中使用
+     * */
+    private long consumePositiveLong() throws ParseErrorException {
         byte c;
         long ret = 0;
         boolean hasLong = false;
@@ -77,8 +51,7 @@ public class RedisCommandParser {
         return ret;
     }
 
-    @VisibleForTesting
-    Slice consumeSlice(long len) throws ParseErrorException {
+    private Slice consumeSlice(long len) throws ParseErrorException {
         ByteArrayDataOutput bo = ByteStreams.newDataOutput();
         for (long i = 0; i < len; i++) {
             try {
@@ -90,11 +63,10 @@ public class RedisCommandParser {
         return new Slice(bo.toByteArray());
     }
 
-    @VisibleForTesting
-    long consumeCount() throws ParseErrorException, EOFException {
+    private long consumeCount() throws ParseErrorException, EOFException {
         expectByte((byte) '*');
         try {
-            long count = consumeLong();
+            long count = consumePositiveLong();
             expectByte((byte) '\n');
             return count;
         } catch (EOFException e) {
@@ -102,11 +74,10 @@ public class RedisCommandParser {
         }
     }
 
-    @VisibleForTesting
-    Slice consumeParameter() throws ParseErrorException {
+    private Slice consumeParameter() throws ParseErrorException {
         try {
             expectByte((byte) '$');
-            long len = consumeLong();
+            long len = consumePositiveLong();
             expectByte((byte) '\n');
             Slice para = consumeSlice(len);
             expectByte((byte) '\r');
@@ -115,17 +86,6 @@ public class RedisCommandParser {
         } catch (EOFException e) {
             throw new ParseErrorException();
         }
-    }
-
-    private static boolean isNumber(byte c) {
-        return '0' <= c && c <= '9';
-    }
-
-    @VisibleForTesting
-    static RedisCommand parse(String stringInput) throws ParseErrorException, EOFException {
-        Preconditions.checkNotNull(stringInput);
-
-        return parse(new ByteArrayInputStream(stringInput.getBytes()));
     }
 
     public static RedisCommand parse(InputStream messageInput) throws ParseErrorException, EOFException {
