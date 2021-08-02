@@ -4,7 +4,7 @@
 
     <groupId>com.github.zxl0714</groupId>
     <artifactId>redis-mock</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3.0-SNAPSHOT</version>
 
     <name>redis-mock</name>
     <description>A simple redis java mock for unit testing.</description>
@@ -87,6 +87,21 @@
             <version>2.6.3</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.luaj</groupId>
+            <artifactId>core</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.luaj</groupId>
+            <artifactId>jse</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.luaj</groupId>
+            <artifactId>jme</artifactId>
+            <version>2.0.3</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -146,6 +161,11 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <additionalJOptions>
+                        <additionalJOption>-Xdoclint:none</additionalJOption>
+                    </additionalJOptions>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
