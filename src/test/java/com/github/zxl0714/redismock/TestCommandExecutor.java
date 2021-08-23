@@ -502,7 +502,7 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testEval() throws ParseErrorException, EOFException, IOException, UnsupportedScriptCommandException {
+    public void testEval() throws ParseErrorException, EOFException, IOException {
         assertEquals(Response.PONG,
             executor.execCommand(parse(array("ping", "return redis.call('ping')", "0")), socket));
 
@@ -544,27 +544,34 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testHdel() throws ParseErrorException, EOFException, IOException {
+    public void testHashDelAndExists() throws ParseErrorException, EOFException, IOException {
+        assertCommandEquals(0, array("hexists", "set", "a"));
         assertCommandEquals(0, array("hdel", "set", "a"));
+
         assertCommandEquals(1, array("hset", "set", "a", "a"));
         assertCommandEquals(1, array("hset", "set", "b", "b"));
         assertCommandEquals(1, array("hset", "set", "c", "c"));
+        assertCommandEquals(1, array("hexists", "set", "a"));
+        assertCommandEquals(1, array("hexists", "set", "b"));
+        assertCommandEquals(1, array("hexists", "set", "c"));
+
         assertCommandEquals(1, array("hdel", "set", "a", "a"));
         assertCommandEquals(2, array("hdel", "set", "a", "a", "b", "c"));
-        assertEquals("*1\r\n$-1\r\n", executor.execCommand(
-            parse(array("hmget", "set", "a")), socket
-        ).toString());
-        assertEquals("*1\r\n$-1\r\n", executor.execCommand(
-            parse(array("hmget", "set", "b")), socket
-        ).toString());
-        assertEquals("*1\r\n$-1\r\n", executor.execCommand(
-            parse(array("hmget", "set", "c")), socket
-        ).toString());
+
+        assertCommandEquals(0, array("hexists", "set", "a"));
+        assertCommandEquals(0, array("hexists", "set", "b"));
+        assertCommandEquals(0, array("hexists", "set", "c"));
+
         // error
         assertCommandOK(array("set", "a", "a"));
         assertCommandError(array("hdel", "set"));
         assertCommandError(array("hdel", "a", "a"));
+        assertCommandError(array("hexists", "a", "a"));
+        assertCommandError(array("hexists", "set"));
+        assertCommandError(array("hexists", "set", "a", "b"));
     }
+
+
 
 
 }

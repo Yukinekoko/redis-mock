@@ -131,6 +131,7 @@ public class CommandExecutor {
         register("hset", new HSETExecutor(), true);
         register("hmget", new HMGETExecutor(), true);
         register("hdel", new HDELExecutor(), true);
+        register("hexists", new HEXISTSExecutor(), true);
     }
 
 
