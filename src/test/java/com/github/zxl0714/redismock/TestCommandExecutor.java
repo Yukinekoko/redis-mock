@@ -515,10 +515,32 @@ public class TestCommandExecutor {
 
     @Test
     public void testHashSetAndGet() throws ParseErrorException, EOFException, IOException {
+        assertCommandNull(array("hget", "set", "a"));
         assertCommandEquals(1, array("hset", "set", "a", "a"));
+        assertCommandEquals("a", array("hget", "a", "a"));
         assertCommandEquals(1, array("hset", "set", "b", "b"));
         assertCommandEquals(1, array("hset", "set", "c", "c"));
         assertCommandEquals(0, array("hset", "set", "a", "aa"));
+        assertCommandEquals("a", array("hget", "a", "aa"));
+        assertCommandEquals("b", array("hget", "b", "b"));
+        assertCommandEquals("c", array("hget", "c", "c"));
+
+        // error
+        assertCommandError(array("hset", "set", "a"));
+        assertCommandError(array("hset", "set", "a", "a", "a"));
+        assertCommandOK(array("set", "a", "a"));
+        assertCommandError(array("hset", "a", "a", "a"));
+        assertCommandError(array("hget", "a", "a"));
+        assertCommandError(array("hget", "set"));
+        assertCommandError(array("hget", "set", "a", "a"));
+
+    }
+
+    @Test
+    public void testHmget() throws ParseErrorException, EOFException, IOException {
+        assertCommandEquals(1, array("hset", "set", "b", "b"));
+        assertCommandEquals(1, array("hset", "set", "c", "c"));
+        assertCommandEquals(1, array("hset", "set", "a", "aa"));
 
         assertEquals(array("aa"), executor.execCommand(
             parse(array("hmget", "set", "a")), socket
@@ -532,19 +554,15 @@ public class TestCommandExecutor {
         assertEquals("*3\r\n$-1\r\n$2\r\naa\r\n$2\r\naa\r\n", executor.execCommand(
             parse(array("hmget", "set", "aaa", "a", "a")), socket
         ).toString());
-        // error
-        assertCommandError(array("hset", "set", "a"));
-        assertCommandError(array("hset", "set", "a", "a", "a"));
-        assertCommandOK(array("set", "a", "a"));
-        assertCommandError(array("hset", "a", "a", "a"));
 
+        // error
+        assertCommandOK(array("set", "a", "a"));
         assertCommandError(array("hmget", "a", "a"));
         assertCommandError(array("hmget", "set"));
-
     }
 
     @Test
-    public void testHashDelAndExists() throws ParseErrorException, EOFException, IOException {
+    public void testHashDelAndExists() throws ParseErrorException, EOFException {
         assertCommandEquals(0, array("hexists", "set", "a"));
         assertCommandEquals(0, array("hdel", "set", "a"));
 
@@ -570,6 +588,119 @@ public class TestCommandExecutor {
         assertCommandError(array("hexists", "set"));
         assertCommandError(array("hexists", "set", "a", "b"));
     }
+
+    @Test
+    // TODO
+    public void testHgetall() throws ParseErrorException, EOFException, IOException {
+        assertEquals(Response.EMPTY_LIST.toString(), executor.execCommand(
+            parse(array("hgetall", "set")), socket
+        ).toString());
+        assertCommandEquals(1, array("hset", "set", "a", "1"));
+        assertEquals(array("a", "1"), executor.execCommand(
+            parse(array("hgetall", "set")), socket
+        ).toString());
+        assertCommandEquals(1, array("hset", "set", "b", "2"));
+        assertEquals(array("a", "1", "b", "2"), executor.execCommand(
+            parse(array("hgetall", "set")), socket
+        ).toString());
+        assertCommandEquals(1, array("hdel", "set", "a"));
+        assertEquals(array("b", "2"), executor.execCommand(
+            parse(array("hgetall", "set")), socket
+        ).toString());
+
+        // error
+        assertCommandOK(array("set", "a", "a"));
+        assertCommandError(array("hgetall", "a"));
+        assertCommandError(array("hgetall"));
+        assertCommandError(array("hgetall", "set", "b"));
+    }
+
+    @Test
+    public void testHincrby() throws ParseErrorException, EOFException {
+        assertCommandEquals(0, array("hincrby", "abc", "a", "0"));
+        assertCommandEquals(2, array("hincrby", "abc", "a", "2"));
+        assertCommandEquals(5, array("hincrby", "abc", "a", "5"));
+        assertCommandEquals(1, array("hset", "set", "a", "1"));
+        assertCommandEquals(-2, array("hincrby", "set", "a", "-3"));
+        assertCommandEquals(-3, array("hincrby", "set", "b", "-3"));
+
+        // error
+        assertCommandOK(array("set", "a", "a"));
+        assertCommandError(array("hincrby", "a", "a", "-3"));
+        assertCommandError(array("hincrby", "set", "a"));
+        assertCommandError(array("hincrby", "set", "a", "-3", "-a"));
+        // 对字符串操作
+        assertCommandEquals(1, array("hset", "set", "b", "b"));
+        assertCommandError(array("hincrby", "set", "b", "-3"));
+        // 传入字符串
+        assertCommandError(array("hincrby", "set", "a", "abc"));
+        // 输入范围超限 TODO
+
+        // 累加范围超限
+
+    }
+
+    @Test
+    public void testHincrbyfloat() {
+
+    }
+
+    @Test
+    public void testHkeys() throws ParseErrorException, EOFException, IOException {
+        assertEquals(Response.EMPTY_LIST.toString(), executor.execCommand(
+            parse(array("hkeys", "set")), socket
+        ).toString());
+        assertCommandEquals(1, array("hset", "set", "a", "1"));
+        assertEquals(array("a"), executor.execCommand(
+            parse(array("hgetall", "set")), socket
+        ).toString());
+        assertCommandEquals(1, array("hset", "set", "b", "2"));
+        assertEquals(array("a", "b"), executor.execCommand(
+            parse(array("hgetall", "set")), socket
+        ).toString());
+
+        //error
+
+    }
+
+    @Test
+    public void testHlen() throws ParseErrorException, EOFException {
+        assertCommandEquals(0, array("hlen", "set"));
+        assertCommandEquals(1, array("hset", "set", "a", "1"));
+        assertCommandEquals(1, array("hlen", "set"));
+        assertCommandEquals(1, array("hset", "set", "b", "2"));
+        assertCommandEquals(1, array("hset", "set", "c", "3"));
+        assertCommandEquals(3, array("hlen", "set"));
+
+        // error
+        assertCommandEquals(1, array("set", "a", "a"));
+        assertCommandError(array("hlen", "a"));
+        assertCommandError(array("hlen"));
+        assertCommandError(array("hlen", "set", "a"));
+    }
+
+    @Test
+    public void testHmset() throws ParseErrorException, EOFException {
+        assertCommandOK(array("hmset", "set", "a", "1", "b", "2"));
+        assertCommandEquals("1", array("hget", "set", "a"));
+        assertCommandEquals("2", array("hget", "set", "b"));
+        assertCommandOK(array("hmset", "set", "a", "a", "b", "b"));
+        assertCommandEquals("a", array("hget", "set", "a"));
+        assertCommandOK(array("hmset", "set", "a", "1", "a", "2"));
+        assertCommandEquals("2", array("hget", "set", "a"));
+
+        // error
+        assertCommandError(array("hmset", "set", "a"));
+        assertCommandError(array("hmset", "set", "a", "1", "b"));
+        assertCommandError(array("hmset", "set"));
+        assertCommandEquals(1, array("set", "a", "a"));
+        assertCommandError(array("hmset", "a", "a", "1"));
+    }
+
+
+
+
+
 
 
 
