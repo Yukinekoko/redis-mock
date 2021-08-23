@@ -168,4 +168,9 @@ public class TestRedisServer {
             // OK
         }
     }
+
+    public static void main(String[] args) throws IOException {
+        RedisServer server = RedisServer.newRedisServer(9202);
+        server.start();
+    }
 }

@@ -43,13 +43,16 @@ public class CommandExecutor {
 
         CommandDescriptor descriptor = executors.get(name);
         if (descriptor == null) {
+            LOGGER.warning(String.format("unknown command %s", name));
             return Response.error(String.format("ERR unknown or disabled command '%s'", name));
         }
         try {
             return descriptor.executor.execute(params.subList(1, params.size()), base, socket);
         } catch (WrongValueTypeException e) {
+            LOGGER.warning(e.getMessage());
             return Response.error(e.getMessage());
         } catch (WrongNumberOfArgumentsException e) {
+            LOGGER.warning(String.format(" wrong number of arguments for '%s' command", name));
             return Response.error(String.format("ERR wrong number of arguments for '%s' command", name));
         } catch (BaseException e) {
             LOGGER.warning("未处理的异常类型 " + e.getClass().getSimpleName() + "：" + e.getMessage());
@@ -124,6 +127,9 @@ public class CommandExecutor {
         register("ping", new PINGExecutor(), true);
         register("quit", new QUITExecutor(), false);
         register("eval", new EVALExecutor(), false);
+        register("info", new INFOExecutor(), true);
+        register("hset", new HSETExecutor(), true);
+        register("hmget", new HMGETExecutor(), true);
     }
 
 

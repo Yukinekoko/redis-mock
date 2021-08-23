@@ -512,5 +512,36 @@ public class TestCommandExecutor {
 
 
     }
-    
+
+    @Test
+    public void testHashSetAndGet() throws ParseErrorException, EOFException, IOException {
+        assertCommandEquals(1, array("hset", "set", "a", "a"));
+        assertCommandEquals(1, array("hset", "set", "b", "b"));
+        assertCommandEquals(1, array("hset", "set", "c", "c"));
+        assertCommandEquals(0, array("hset", "set", "a", "aa"));
+
+        assertEquals(array("aa"), executor.execCommand(
+            parse(array("hmget", "set", "a")), socket
+        ).toString());
+        assertEquals(array("aa", "b", "c"), executor.execCommand(
+            parse(array("hmget", "set", "a", "b", "c")), socket
+        ).toString());
+        assertEquals("*1\r\n$-1\r\n", executor.execCommand(
+            parse(array("hmget", "set", "aaa")), socket
+        ).toString());
+        assertEquals("*3\r\n$-1\r\n$2\r\naa\r\n$2\r\naa\r\n", executor.execCommand(
+            parse(array("hmget", "set", "aaa", "a", "a")), socket
+        ).toString());
+        // error
+        assertCommandError(array("hset", "set", "a"));
+        assertCommandError(array("hset", "set", "a", "a", "a"));
+        assertCommandOK(array("set", "a", "a"));
+        assertCommandError(array("hset", "a", "a", "a"));
+
+        assertCommandError(array("hmget", "a", "a"));
+        assertCommandError(array("hmget", "set"));
+
+    }
+
+
 }

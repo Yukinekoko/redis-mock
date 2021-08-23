@@ -30,6 +30,12 @@ public class Utils {
         }
     }
 
+    public static void checkArgumentsNumberLess(List<Slice> args, int expect) throws WrongNumberOfArgumentsException {
+        if (args.size() >= expect) {
+            throw new WrongNumberOfArgumentsException();
+        }
+    }
+
     public static void checkArgumentsNumberFactor(List<Slice> args, int factor) throws WrongNumberOfArgumentsException {
         if (args.size() % factor != 0) {
             throw new WrongNumberOfArgumentsException();
