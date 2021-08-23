@@ -543,5 +543,28 @@ public class TestCommandExecutor {
 
     }
 
+    @Test
+    public void testHdel() throws ParseErrorException, EOFException, IOException {
+        assertCommandEquals(0, array("hdel", "set", "a"));
+        assertCommandEquals(1, array("hset", "set", "a", "a"));
+        assertCommandEquals(1, array("hset", "set", "b", "b"));
+        assertCommandEquals(1, array("hset", "set", "c", "c"));
+        assertCommandEquals(1, array("hdel", "set", "a", "a"));
+        assertCommandEquals(2, array("hdel", "set", "a", "a", "b", "c"));
+        assertEquals("*1\r\n$-1\r\n", executor.execCommand(
+            parse(array("hmget", "set", "a")), socket
+        ).toString());
+        assertEquals("*1\r\n$-1\r\n", executor.execCommand(
+            parse(array("hmget", "set", "b")), socket
+        ).toString());
+        assertEquals("*1\r\n$-1\r\n", executor.execCommand(
+            parse(array("hmget", "set", "c")), socket
+        ).toString());
+        // error
+        assertCommandOK(array("set", "a", "a"));
+        assertCommandError(array("hdel", "set"));
+        assertCommandError(array("hdel", "a", "a"));
+    }
+
 
 }

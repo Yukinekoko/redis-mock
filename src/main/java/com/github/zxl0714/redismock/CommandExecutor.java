@@ -130,6 +130,7 @@ public class CommandExecutor {
         register("info", new INFOExecutor(), true);
         register("hset", new HSETExecutor(), true);
         register("hmget", new HMGETExecutor(), true);
+        register("hdel", new HDELExecutor(), true);
     }
 
 
