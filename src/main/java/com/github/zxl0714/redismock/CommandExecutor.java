@@ -138,6 +138,9 @@ public class CommandExecutor {
         register("hkeys", new HKEYSExecutor(), true);
         register("hlen", new HLENExecutor(), true);
         register("hmset", new HMSETExecutor(), true);
+        register("hsetnx", new HSETNXExecutor(), true);
+        register("hstrlen", new HSTRLENExecutor(), true);
+        register("hvals", new HVALSExecutor(), true);
     }
 
 

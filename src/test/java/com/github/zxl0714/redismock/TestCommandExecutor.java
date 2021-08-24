@@ -705,6 +705,61 @@ public class TestCommandExecutor {
         assertCommandError(array("hmset", "a", "a", "1"));
     }
 
+    @Test
+    public void testHsetnx() throws ParseErrorException, EOFException {
+        assertCommandEquals(1, array("hsetnx", "h1", "key", "val"));
+        assertCommandEquals("val", array("hget", "h1", "key"));
+        assertCommandEquals(0, array("hsetnx", "h1", "key", "newval"));
+        assertCommandEquals("val", array("hget", "h1", "key"));
+
+        // error
+        assertCommandOK(array("set", "s1", "str"));
+        assertCommandError(array("hsetnx", "s1", "key", "val"));
+        assertCommandError(array("hsetnx", "h1", "key"));
+        assertCommandError(array("hsetnx", "h1", "key", "val", "val"));
+    }
+
+    @Test
+    public void testHstrlen() throws ParseErrorException, EOFException {
+        assertCommandEquals(0, array("hstrlen", "h1", "key"));
+        assertCommandEquals(1, array("hsetnx", "h1", "key", "val"));
+        assertCommandEquals(3, array("hstrlen", "h1", "key"));
+        assertCommandEquals(0, array("hset", "h1", "key", "helloworld"));
+        assertCommandEquals(10, array("hstrlen", "h1", "key"));
+        assertCommandEquals(1, array("hset", "h1", "key1", "-10"));
+        assertCommandEquals(3, array("hstrlen", "h1", "key1"));
+        assertCommandEquals(0, array("hstrlen", "h1", "keynull"));
+
+        // error
+        assertCommandOK(array("set", "s1", "str"));
+        assertCommandError(array("hstrlen", "s1", "key"));
+        assertCommandError(array("hstrlen", "h1", "key", "key"));
+        assertCommandError(array("hstrlen", "h1"));
+
+    }
+
+    @Test
+    public void testHvals() throws ParseErrorException, EOFException, IOException {
+        assertEquals(Response.EMPTY_LIST.toString(), executor.execCommand(
+            parse(array("hvals", "h1")), socket
+        ).toString());
+        assertCommandOK(array("hmset", "h1", "k1", "v1", "k2", "v2"));
+        assertEquals(array("v1", "v2"), executor.execCommand(
+            parse(array("hvals", "h1")), socket
+        ).toString());
+
+        // error
+        assertCommandOK(array("set", "s1", "str"));
+        assertCommandError(array("hvals", "s1"));
+        assertCommandError(array("hvals", "h1", "h1"));
+        assertCommandError(array("hvals"));
+    }
+
+    @Test
+    public void testHscan() {
+
+    }
+
 
 
 
