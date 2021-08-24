@@ -132,6 +132,8 @@ public class CommandExecutor {
         register("hmget", new HMGETExecutor(), true);
         register("hdel", new HDELExecutor(), true);
         register("hexists", new HEXISTSExecutor(), true);
+        register("hgetall", new HGETALLExecutor(), true);
+        register("hincrby", new HINCRBYExecutor(), true);
     }
 
 

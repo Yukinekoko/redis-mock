@@ -590,7 +590,6 @@ public class TestCommandExecutor {
     }
 
     @Test
-    // TODO
     public void testHgetall() throws ParseErrorException, EOFException, IOException {
         assertEquals(Response.EMPTY_LIST.toString(), executor.execCommand(
             parse(array("hgetall", "set")), socket
@@ -619,7 +618,7 @@ public class TestCommandExecutor {
     public void testHincrby() throws ParseErrorException, EOFException {
         assertCommandEquals(0, array("hincrby", "abc", "a", "0"));
         assertCommandEquals(2, array("hincrby", "abc", "a", "2"));
-        assertCommandEquals(5, array("hincrby", "abc", "a", "5"));
+        assertCommandEquals(7, array("hincrby", "abc", "a", "5"));
         assertCommandEquals(1, array("hset", "set", "a", "1"));
         assertCommandEquals(-2, array("hincrby", "set", "a", "-3"));
         assertCommandEquals(-3, array("hincrby", "set", "b", "-3"));
@@ -630,13 +629,18 @@ public class TestCommandExecutor {
         assertCommandError(array("hincrby", "set", "a"));
         assertCommandError(array("hincrby", "set", "a", "-3", "-a"));
         // 对字符串操作
-        assertCommandEquals(1, array("hset", "set", "b", "b"));
+        assertCommandEquals(0, array("hset", "set", "b", "b"));
         assertCommandError(array("hincrby", "set", "b", "-3"));
         // 传入字符串
         assertCommandError(array("hincrby", "set", "a", "abc"));
-        // 输入范围超限 TODO
-
+        // 输入范围超限
+        assertCommandError(array("hincrby", "set", "s1", "9223372036854775808"));
+        assertCommandError(array("hincrby", "set", "s2", "-9223372036854775809"));
         // 累加范围超限
+        assertCommandEquals(9223372036854775807L, array("hincrby", "set", "s1", "9223372036854775807"));
+        assertCommandEquals(-9223372036854775808L, array("hincrby", "set", "s2", "-9223372036854775808"));
+        assertCommandError(array("hincrby", "set", "s1", "1"));
+        assertCommandError(array("hincrby", "set", "s2", "-1"));
 
     }
 
