@@ -645,8 +645,9 @@ public class TestCommandExecutor {
     }
 
     @Test
+    // TODO : (snowmeow:yuki754685421@163.com) double值响应
     public void testHincrbyfloat() {
-
+        System.out.println(String.valueOf(Double.MAX_VALUE));
     }
 
     @Test
@@ -656,15 +657,18 @@ public class TestCommandExecutor {
         ).toString());
         assertCommandEquals(1, array("hset", "set", "a", "1"));
         assertEquals(array("a"), executor.execCommand(
-            parse(array("hgetall", "set")), socket
+            parse(array("hkeys", "set")), socket
         ).toString());
         assertCommandEquals(1, array("hset", "set", "b", "2"));
         assertEquals(array("a", "b"), executor.execCommand(
-            parse(array("hgetall", "set")), socket
+            parse(array("hkeys", "set")), socket
         ).toString());
 
         //error
-
+        assertCommandOK(array("set", "a", "a"));
+        assertCommandError(array("hkeys", "a"));
+        assertCommandError(array("hkeys"));
+        assertCommandError(array("hkeys", "set", "a"));
     }
 
     @Test
@@ -677,7 +681,7 @@ public class TestCommandExecutor {
         assertCommandEquals(3, array("hlen", "set"));
 
         // error
-        assertCommandEquals(1, array("set", "a", "a"));
+        assertCommandOK(array("set", "a", "a"));
         assertCommandError(array("hlen", "a"));
         assertCommandError(array("hlen"));
         assertCommandError(array("hlen", "set", "a"));
@@ -697,7 +701,7 @@ public class TestCommandExecutor {
         assertCommandError(array("hmset", "set", "a"));
         assertCommandError(array("hmset", "set", "a", "1", "b"));
         assertCommandError(array("hmset", "set"));
-        assertCommandEquals(1, array("set", "a", "a"));
+        assertCommandOK(array("set", "a", "a"));
         assertCommandError(array("hmset", "a", "a", "1"));
     }
 

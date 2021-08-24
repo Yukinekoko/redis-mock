@@ -134,6 +134,7 @@ public class CommandExecutor {
         register("hexists", new HEXISTSExecutor(), true);
         register("hgetall", new HGETALLExecutor(), true);
         register("hincrby", new HINCRBYExecutor(), true);
+        register("hkeys", new HKEYSExecutor(), true);
     }
 
 
