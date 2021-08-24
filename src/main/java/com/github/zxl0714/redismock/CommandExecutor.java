@@ -129,6 +129,7 @@ public class CommandExecutor {
         register("eval", new EVALExecutor(), false);
         register("info", new INFOExecutor(), true);
         register("hset", new HSETExecutor(), true);
+        register("hget", new HGETExecutor(), true);
         register("hmget", new HMGETExecutor(), true);
         register("hdel", new HDELExecutor(), true);
         register("hexists", new HEXISTSExecutor(), true);
@@ -136,6 +137,7 @@ public class CommandExecutor {
         register("hincrby", new HINCRBYExecutor(), true);
         register("hkeys", new HKEYSExecutor(), true);
         register("hlen", new HLENExecutor(), true);
+        register("hmset", new HMSETExecutor(), true);
     }
 
 

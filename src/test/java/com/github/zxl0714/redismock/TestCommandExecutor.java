@@ -517,13 +517,13 @@ public class TestCommandExecutor {
     public void testHashSetAndGet() throws ParseErrorException, EOFException, IOException {
         assertCommandNull(array("hget", "set", "a"));
         assertCommandEquals(1, array("hset", "set", "a", "a"));
-        assertCommandEquals("a", array("hget", "a", "a"));
+        assertCommandEquals("a", array("hget", "set", "a"));
         assertCommandEquals(1, array("hset", "set", "b", "b"));
         assertCommandEquals(1, array("hset", "set", "c", "c"));
         assertCommandEquals(0, array("hset", "set", "a", "aa"));
-        assertCommandEquals("a", array("hget", "a", "aa"));
-        assertCommandEquals("b", array("hget", "b", "b"));
-        assertCommandEquals("c", array("hget", "c", "c"));
+        assertCommandEquals("aa", array("hget", "set", "a"));
+        assertCommandEquals("b", array("hget", "set", "b"));
+        assertCommandEquals("c", array("hget", "set", "c"));
 
         // error
         assertCommandError(array("hset", "set", "a"));
