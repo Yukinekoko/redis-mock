@@ -7,7 +7,7 @@ package com.github.zxl0714.redismock;
 public class SocketContextHolder {
 
     private static final ThreadLocal<SocketAttributes> socketAttributesThreadLocal
-        = new ThreadLocal<SocketAttributes>();
+        = new ThreadLocal<>();
 
     public static void setSocketAttributes(SocketAttributes socketAttributes) {
         socketAttributesThreadLocal.set(socketAttributes);

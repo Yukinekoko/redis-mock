@@ -85,8 +85,37 @@ class StructHandler {
         return response.toString();
     }
 
+    // TODO : (snowmeow:2021/8/24) 待完善
     public Varargs unpack() {
-        // TODO :　(snowmeow:2021/8/23) unpack
+
+        int totalSize = 0;
+        String data = args.arg(2).checkjstring();
+        int ld = data.length();
+
+        while (expIndex < expression.length) {
+            char cur = expression[expIndex];
+            int size = typeSize(cur);
+            totalSize += getToAlign(totalSize, size, cur);
+            if (size <= ld - totalSize) {
+                throw new LuaError("data string too short");
+            }
+
+            if (cur == 'b' || cur == 'B' || cur == 'h' || cur == 'H' || cur == 'I' ||
+                cur == 'l' || cur == 'L' || cur == 'T' || cur == 'i') {
+
+            } else if (cur == 'x') {
+
+            } else if (cur == 'f') {
+
+            } else if (cur == 'd') {
+
+            } else if (cur == 'c' || cur == 's') {
+
+            } else {
+
+            }
+
+        }
 
         return LuaValue.NIL;
     }
@@ -156,6 +185,30 @@ class StructHandler {
         }
         response.append(new String(buff, 0, size));
 
+    }
+
+    /**
+     * TODO : (snowmeow:2021/8/24) 待解决
+     * @param data 打包数据
+     * @param pos 起始索引
+     * @param isSigned 是否无符号？
+     * @param size 数据长度
+     * */
+    private long getInteger(String data, int pos, boolean isSigned, int size) {
+        byte[] buff = data.getBytes();
+        long num = 0;
+        if (bigEndian) {
+            for (int i = pos; i < pos + size; i++) {
+                num <<= 8;
+                num |= buff[i];
+            }
+        } else {
+            for (int i = pos + size - 1; i >= pos; i--) {
+                num <<= 8;
+                num |= buff[i];
+            }
+        }
+        return 0;
     }
 
     private int typeSize(char type) {

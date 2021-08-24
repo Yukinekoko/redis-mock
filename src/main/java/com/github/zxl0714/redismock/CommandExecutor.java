@@ -122,7 +122,6 @@ public class CommandExecutor {
         register("publish", new PUBLISHExecutor(), true);
         register("subscribe", new SUBSCRIBEExecutor(), false);
         register("unsubscribe", new UNSUBSCRIBEExecutor(), false);
-        // TODO : (snowmeow:2021/7/26) 在lua环境下select指令仅影响脚本内的操作
         register("select", new SELECTExecutor(), true);
         register("ping", new PINGExecutor(), true);
         register("quit", new QUITExecutor(), false);

@@ -55,6 +55,27 @@ public class TestCommandEVAL {
         assertCommandEquals("abc", array("eval", "return 'abc'", "0"));
     }
 
+    /**
+     * 在Lua环境下切换数据库仅影响脚本内选择的数据库
+     * */
+    @Test
+    public void testSelectDataBase() throws ParseErrorException, EOFException {
+        assertCommandOK(array("set", "s1", "str0"));
+        assertCommandEquals("str0", array("get", "s1"));
+        assertCommandOK(array("select", "1"));
+        assertCommandOK(array("set", "s1", "str1"));
+        assertCommandEquals("str1", array("get", "s1"));
+
+        assertCommandOK(array("select", "0"));
+        assertCommandEquals("str0",
+            array("eval", "return redis.call('get', 's1')", "0"));
+        assertCommandEquals("str1",
+            array("eval", "redis.call('select', '1'); return redis.call('get', 's1')", "0"));
+        assertCommandEquals("str0", array("get", "s1"));
+        assertCommandEquals("str0",
+            array("eval", "return redis.call('get', 's1')", "0"));
+    }
+
     @Test
     public void testCallKeysAndArgv() throws ParseErrorException, EOFException, IOException {
         assertCommandOK(array("eval", "return redis.call('set', 'a', 'abc')", "0"));
@@ -131,7 +152,7 @@ public class TestCommandEVAL {
         assertCommandError(array("eval", "return redis.sha1hex()", "0"));
     }
 
-    // @Test
+    // @Test TODO : (snowmeow:2021//8/24) 待解决2
     public void testBitopLib() throws ParseErrorException, EOFException, IOException {
         // tobit
         assertCommandEquals(255, array("eval", "return bit.tobit(0xff)", "0"));

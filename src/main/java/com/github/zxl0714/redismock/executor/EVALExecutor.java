@@ -3,6 +3,7 @@ package com.github.zxl0714.redismock.executor;
 import com.github.zxl0714.redismock.RedisBase;
 import com.github.zxl0714.redismock.Response;
 import com.github.zxl0714.redismock.Slice;
+import com.github.zxl0714.redismock.SocketContextHolder;
 import com.github.zxl0714.redismock.expecptions.BaseException;
 import com.github.zxl0714.redismock.expecptions.RedisCallCommandException;
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
@@ -62,6 +63,7 @@ public class EVALExecutor extends AbstractExecutor {
         bindings.put("KEYS", keyTable);
         bindings.put("ARGV", argTable);
         Varargs scriptResult;
+        int baseIndex = SocketContextHolder.getSocketAttributes().getDatabaseIndex();
         try {
             compiledScript = engine.compile(params.get(0).toString());
             scriptResult = (Varargs) compiledScript.eval(bindings);
@@ -70,6 +72,7 @@ public class EVALExecutor extends AbstractExecutor {
         } catch (RedisCallCommandException e) {
             return Response.error(e.getMessage());
         }
+        SocketContextHolder.getSocketAttributes().setDatabaseIndex(baseIndex);
         return LuaToRedisReplyParser.parse((scriptResult).arg1());
     }
 }
