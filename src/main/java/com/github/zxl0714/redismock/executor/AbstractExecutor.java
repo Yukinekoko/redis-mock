@@ -26,4 +26,12 @@ public abstract class AbstractExecutor implements Executor {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
         }
     }
+
+    protected double getDouble(Slice slice) throws WrongValueTypeException {
+        try {
+            return Double.parseDouble(slice.toString());
+        } catch (NumberFormatException e) {
+            throw new WrongValueTypeException("ERR value is not a valid float");
+        }
+    }
 }

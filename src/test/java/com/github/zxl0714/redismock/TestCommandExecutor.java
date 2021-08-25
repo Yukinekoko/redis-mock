@@ -657,9 +657,23 @@ public class TestCommandExecutor {
     }
 
     @Test
-    // TODO : (snowmeow:yuki754685421@163.com) double值响应
-    public void testHincrbyfloat() {
-        System.out.println(String.valueOf(Double.MAX_VALUE));
+    public void testHincrbyfloat() throws ParseErrorException, EOFException {
+        assertCommandEquals("1.21999999999999997", array("hincrbyfloat", "hash", "h1", "1.22"));
+        assertCommandEquals("1.22000000012199994", array("hincrbyfloat", "hash", "h1", "1.22E-10"));
+        assertCommandEquals("1219999999999999962334747426816", array("hincrbyfloat", "hash", "h1", "1.22E30"));
+        assertCommandEquals("179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368",
+            array("hincrbyfloat", "hash", "hh11", "1.7976931348623157E308"));
+
+        //ERROR
+        assertCommandOK(array("set", "s1", "s1"));
+        assertCommandEquals(1, array("hset", "hash", "ha", "h1"));
+        assertCommandError(array("hincrbyfloat", "hash", "ha", "1"));
+        assertCommandError(array("hincrbyfloat", "hash", "h1", "a"));
+        assertCommandError(array("hincrbyfloat", "s1", "s1", "1.22"));
+        assertCommandError(array("hincrbyfloat", "hash", "h1"));
+        assertCommandError(array("hincrbyfloat", "hash", "h1", "1", "1"));
+        assertCommandError(array("hincrbyfloat", "hash", "h2", "1.7976931348623157E309"));
+        assertCommandError(array("hincrbyfloat", "hash", "hh11", "1.7976931348623157E308"));
     }
 
     @Test

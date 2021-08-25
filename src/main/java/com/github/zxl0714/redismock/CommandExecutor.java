@@ -141,6 +141,7 @@ public class CommandExecutor {
         register("hstrlen", new HSTRLENExecutor(), true);
         register("hvals", new HVALSExecutor(), true);
         register("hscan", new HSCANExecutor(), true);
+        register("hincrbyfloat", new HINCRBYFLOATExecutor(), true);
     }
 
 
