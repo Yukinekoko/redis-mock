@@ -75,9 +75,21 @@ public class TestCommandExecutor {
         return RedisCommandParser.parse(inputStream);
     }
 
+    private String exec(String command) throws ParseErrorException, EOFException, IOException {
+        return executor.execCommand(parse(command), socket).toString();
+    }
+
     private void assertCommandEquals(String expect, String command) throws ParseErrorException, EOFException {
         try {
             assertEquals(bulkString(expect), executor.execCommand(parse(command), socket).toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void assertCommandArrayEquals(String array, String command) throws ParseErrorException, EOFException {
+        try {
+            assertEquals(array, executor.execCommand(parse(command), socket).toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -756,8 +768,69 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testHscan() {
-
+    public void testHscan() throws ParseErrorException, EOFException, IOException {
+        // normal
+        assertEquals("*2\r\n$1\r\n0\r\n*-1\r\n",
+            exec(array("hscan", "h1", "0")));
+        assertCommandOK(array("hmset", "h1",
+            "k1", "v1",
+            "k2", "v2",
+            "k3", "v3",
+            "k4", "v4",
+            "k5", "v5",
+            "k6", "v6",
+            "k7", "v7",
+            "k8", "v8",
+            "k9", "v9",
+            "k10", "v10"));
+        assertEquals("*2\r\n$1\r\n0\r\n*20\r\n" +
+            "$2\r\nk1\r\n$2\r\nv1\r\n" +
+            "$2\r\nk2\r\n$2\r\nv2\r\n" +
+            "$2\r\nk3\r\n$2\r\nv3\r\n" +
+            "$2\r\nk4\r\n$2\r\nv4\r\n" +
+            "$2\r\nk5\r\n$2\r\nv5\r\n" +
+            "$3\r\nk10\r\n$3\r\nv10\r\n" +
+            "$2\r\nk6\r\n$2\r\nv6\r\n" +
+            "$2\r\nk7\r\n$2\r\nv7\r\n" +
+            "$2\r\nk8\r\n$2\r\nv8\r\n" +
+            "$2\r\nk9\r\n$2\r\nv9\r\n",
+            exec(array("hscan", "h1", "0")));
+        // count
+        assertEquals("*2\r\n$1\r\n5\r\n*10\r\n" +
+            "$2\r\nk1\r\n$2\r\nv1\r\n" +
+            "$2\r\nk2\r\n$2\r\nv2\r\n" +
+            "$2\r\nk3\r\n$2\r\nv3\r\n" +
+            "$2\r\nk4\r\n$2\r\nv4\r\n" +
+            "$2\r\nk5\r\n$2\r\nv5\r\n",
+            exec(array("hscan", "h1", "0", "count", "5")));
+        assertEquals("*2\r\n$1\r\n0\r\n*10\r\n" +
+            "$3\r\nk10\r\n$3\r\nv10\r\n" +
+            "$2\r\nk6\r\n$2\r\nv6\r\n" +
+            "$2\r\nk7\r\n$2\r\nv7\r\n" +
+            "$2\r\nk8\r\n$2\r\nv8\r\n" +
+            "$2\r\nk9\r\n$2\r\nv9\r\n",
+            exec(array("hscan", "h1", "5", "count", "5")));
+        // match
+        assertEquals("*2\r\n$1\r\n5\r\n*2\r\n" +
+                "$2\r\nk1\r\n$2\r\nv1\r\n",
+            exec(array("hscan", "h1", "0", "count", "5", "match", "k1")));
+        assertEquals("*2\r\n$1\r\n0\r\n*4\r\n" +
+                "$2\r\nk1\r\n$2\r\nv1\r\n" +
+                "$3\r\nk10\r\n$3\r\nv10\r\n",
+            exec(array("hscan", "h1", "0", "count", "10", "match", "k1*")));
+        // error
+        assertCommandOK(array("set", "s1", "str"));
+        assertCommandError(array("hscan", "s1", "0"));
+        assertCommandError(array("hscan", "h1"));
+        assertCommandError(array("hscan", "h1", "-1"));
+        assertCommandError(array("hscan", "h1", "abc"));
+        assertCommandError(array("hscan", "h1", "0", "count", "0"));
+        assertCommandError(array("hscan", "h1", "0", "count", "-1"));
+        assertCommandError(array("hscan", "h1", "0", "count", "abc"));
+        assertCommandError(array("hscan", "h1", "0", "count"));
+        assertCommandError(array("hscan", "h1", "0", "baba", "0"));
+        assertCommandError(array("hscan", "h1", "0", "count", "1", "match"));
+        assertCommandError(array("hscan", "h1", "0", "count", "1", "match", "*", "a"));
     }
 
 

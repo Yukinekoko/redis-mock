@@ -1,6 +1,7 @@
 package com.github.zxl0714.redismock.executor;
 
 import com.github.zxl0714.redismock.Slice;
+import com.github.zxl0714.redismock.expecptions.WrongValueTypeException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,5 +17,13 @@ public abstract class AbstractExecutor implements Executor {
         OutputStream outputStream = socket.getOutputStream();
         outputStream.write(message.data());
         outputStream.flush();
+    }
+
+    protected long getLong(Slice slice) throws WrongValueTypeException {
+        try {
+            return Long.parseLong(slice.toString());
+        } catch (NumberFormatException e) {
+            throw new WrongValueTypeException("ERR value is not an integer or out of range");
+        }
     }
 }

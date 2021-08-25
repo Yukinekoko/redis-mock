@@ -6,6 +6,9 @@ import com.github.zxl0714.redismock.pattern.TokenType;
  * @author kael.
  */
 public class AsteriskToken extends AbstractToken {
+
+    private boolean first = true;
+
     @Override
     public TokenType getType() {
         return TokenType.ASTERISK;
@@ -16,16 +19,21 @@ public class AsteriskToken extends AbstractToken {
         if (start >= bytes.length) {
             throw new ArrayIndexOutOfBoundsException("byte array length " + bytes.length + ", request index: " + start);
         }
+        if (first) {
+            first = false;
+            eatAtPosition = start - 1;
+            return true;
+        }
         byte[] n = new byte[eated.length + 1];
         System.arraycopy(eated, 0, n, 0, eated.length);
-        n[n.length - 1] = bytes[start];
+        eatAtPosition++;
+        n[n.length - 1] = bytes[eatAtPosition];
         eated = n;
-        eatAtPosition = start;
         return true;
     }
 
     @Override
     public void clearEated() {
-        
+
     }
 }

@@ -12,7 +12,7 @@ public class IdentifierToken extends AbstractToken {
 
     protected byte[] data;
 
-    protected byte[] eated = new byte[0];
+    // protected byte[] eated = new byte[0];
 
     public IdentifierToken(byte[] data) {
         List<Byte> list = new ArrayList<Byte>(data.length);

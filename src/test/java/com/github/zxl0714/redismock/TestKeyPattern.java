@@ -26,8 +26,10 @@ public class TestKeyPattern {
         KeyPattern pattern10 = new KeyPattern(new Slice("a[d\\*a]c"));
         KeyPattern pattern11 = new KeyPattern(new Slice("a[a^]c"));
         KeyPattern pattern12 = new KeyPattern(new Slice("a[^a-c]c"));
-        
-        Assert.assertTrue(pattern1.match(new Slice("123abc456")));
+        KeyPattern pattern13 = new KeyPattern(new Slice("*"));
+
+        Assert.assertTrue(pattern1.match(new Slice("abc")));
+        Assert.assertTrue(pattern1.match(new Slice("abc")));
         Assert.assertFalse(pattern1.match(new Slice("123aac456")));
         
         Assert.assertTrue(pattern2.match(new Slice("3abc5")));
@@ -53,6 +55,9 @@ public class TestKeyPattern {
         Assert.assertFalse(pattern12.match(new Slice("abc")));
         Assert.assertFalse(pattern12.match(new Slice("acc")));
         Assert.assertTrue(pattern12.match(new Slice("adc")));
+
+        Assert.assertTrue(pattern13.match(new Slice("a")));
+        Assert.assertTrue(pattern13.match(new Slice("aaa")));
     }
     @Test
     public void testAstResolve(){

@@ -190,6 +190,10 @@ public class KeyPattern {
             if (start >= key.length() && index == ast.size() - 1) {
                 return true;
             }
+            if (start >= key.length() && index == ast.size() - 2
+                && ast.get(ast.size() - 1).getType() == TokenType.ASTERISK) {
+                return true;
+            }
             if (index < ast.size() - 1) {
                 index++;
             }

@@ -140,6 +140,7 @@ public class CommandExecutor {
         register("hsetnx", new HSETNXExecutor(), true);
         register("hstrlen", new HSTRLENExecutor(), true);
         register("hvals", new HVALSExecutor(), true);
+        register("hscan", new HSCANExecutor(), true);
     }
 
 
