@@ -1,6 +1,10 @@
 package com.github.zxl0714.redismock;
 
 import com.github.zxl0714.redismock.executor.*;
+import com.github.zxl0714.redismock.executor.hash.*;
+import com.github.zxl0714.redismock.executor.list.*;
+import com.github.zxl0714.redismock.executor.set.*;
+import com.github.zxl0714.redismock.executor.str.*;
 import com.github.zxl0714.redismock.expecptions.*;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -127,6 +131,7 @@ public class CommandExecutor {
         register("quit", new QUITExecutor(), false);
         register("eval", new EVALExecutor(), false);
         register("info", new INFOExecutor(), true);
+        // hash
         register("hset", new HSETExecutor(), true);
         register("hget", new HGETExecutor(), true);
         register("hmget", new HMGETExecutor(), true);
@@ -142,6 +147,14 @@ public class CommandExecutor {
         register("hvals", new HVALSExecutor(), true);
         register("hscan", new HSCANExecutor(), true);
         register("hincrbyfloat", new HINCRBYFLOATExecutor(), true);
+        // set
+        register("sadd", new SADDExecutor(), true);
+        register("scard", new SCARDExecutor(), true);
+        register("smembers", new SMEMBERSExecutor(), true);
+        register("sdiff", new SDIFFExecutor(), true);
+        register("sdiffstore", new SDIFFSTOREExecutor(), true);
+
+
     }
 
 

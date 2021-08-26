@@ -858,28 +858,28 @@ public class TestCommandExecutor {
         assertCommandEquals(0, array("sadd", "set1", "k1"));
         assertCommandEquals(1, array("scard", "set1"));
         assertCommandEquals(3, array("sadd", "set1", "k2", "k3", "k4"));
-        assertEquals("*4\r\n$2\r\nk1\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk4\r\n", exec(array("smembers", "set1")));
+        assertEquals("*4\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk4\r\n$2\r\nk1\r\n", exec(array("smembers", "set1")));
         assertCommandEquals(2, array("sadd", "set1", "k4", "k5", "k6"));
         assertCommandEquals(6, array("scard", "set1"));
         // SDIFF
         assertCommandEquals(3, array("sadd", "set2", "k2", "k3", "k4"));
         assertCommandEquals(3, array("sadd", "set3", "k4", "k5", "k7"));
-        assertEquals("*3\r\n$2\r\nk1\r\n$2\r\nk5\r\n$2\r\nk6\r\n", exec(array("sdiff", "set1", "set2")));
-        assertEquals("*4\r\n$2\r\nk1\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk6\r\n", exec(array("sdiff", "set1", "set3")));
-        assertEquals("*2\r\n$2\r\nk1\r\n$2\r\nk6\r\n", exec(array("sdiff", "set1", "set2", "set3")));
+        assertEquals("*3\r\n$2\r\nk5\r\n$2\r\nk6\r\n$2\r\nk1\r\n", exec(array("sdiff", "set1", "set2")));
+        assertEquals("*4\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk6\r\n$2\r\nk1\r\n", exec(array("sdiff", "set1", "set3")));
+        assertEquals("*2\r\n$2\r\nk6\r\n$2\r\nk1\r\n", exec(array("sdiff", "set1", "set2", "set3")));
         assertEquals("*0\r\n", exec(array("sdiff", "set2", "set1")));
-        assertEquals("*4\r\n$2\r\nk1\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk4\r\n", exec(array("sdiff", "set2")));
+        assertEquals("*3\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk4\r\n", exec(array("sdiff", "set2")));
         assertEquals("*3\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk4\r\n", exec(array("sdiff", "set2", "set0")));
         // SDIFFSTORE
-        assertCommandEquals(4, array("sdiffstore", "set4", "set2"));
-        assertEquals("*4\r\n$2\r\nk1\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk4\r\n", exec(array("smembers", "set4")));
-        assertCommandEquals(4, array("sdiffstore", "set4", "set1", "set2"));
-        assertEquals("*3\r\n$2\r\nk1\r\n$2\r\nk5\r\n$2\r\nk6\r\n", exec(array("smembers", "set4")));
-        assertCommandEquals(4, array("sdiffstore", "set4", "set2", "set1"));
+        assertCommandEquals(3, array("sdiffstore", "set4", "set2"));
+        assertEquals("*3\r\n$2\r\nk2\r\n$2\r\nk3\r\n$2\r\nk4\r\n", exec(array("smembers", "set4")));
+        assertCommandEquals(3, array("sdiffstore", "set4", "set1", "set2"));
+        assertEquals("*3\r\n$2\r\nk6\r\n$2\r\nk5\r\n$2\r\nk1\r\n", exec(array("smembers", "set4")));
+        assertCommandEquals(0, array("sdiffstore", "set4", "set2", "set1"));
         assertEquals("*0\r\n", exec(array("smembers", "set4")));
         assertCommandOK(array("set", "str1", "str1"));
-        assertCommandEquals(4, array("sdiffstore", "str1", "set1", "set2"));
-        assertEquals("*3\r\n$2\r\nk1\r\n$2\r\nk5\r\n$2\r\nk6\r\n", exec(array("smembers", "str1")));
+        assertCommandEquals(3, array("sdiffstore", "str1", "set1", "set2"));
+        assertEquals("*3\r\n$2\r\nk6\r\n$2\r\nk5\r\n$2\r\nk1\r\n", exec(array("smembers", "str1")));
 
         // error
         assertCommandOK(array("set", "str1", "str1"));
@@ -893,7 +893,7 @@ public class TestCommandExecutor {
         assertCommandError(array("scard", "set1", "set2"));
         assertCommandError(array("sdiff", "str1", "set2"));
         assertCommandError(array("sdiff", "set1", "str1"));
-        assertCommandError(array("sdiff", "set1", "set2", "str2"));
+        assertCommandError(array("sdiff", "set1", "set2", "str1"));
         assertCommandError(array("sdiffstore", "set4"));
         assertCommandError(array("sdiffstore", "set4", "set1", "str1"));
 
