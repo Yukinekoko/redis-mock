@@ -899,6 +899,39 @@ public class TestCommandExecutor {
         assertEquals(array(), exec(array("smembers", "inter_set1")));
         assertCommandEquals(3, array("sinterstore", "inter_set1", "set2"));
         assertEquals(array("k2", "k3", "k4"), exec(array("smembers", "inter_set1")));
+        // SISMEMBER SMOVE
+        assertCommandEquals(1, array("sismember", "set1", "k1"));
+        assertCommandEquals(1, array("sismember", "set1", "k2"));
+        assertCommandEquals(0, array("sismember", "set1", "k10"));
+        assertCommandEquals(0, array("smove", "set1", "move_set1", "k10"));
+        assertCommandEquals(0, array("sismember", "move_set1", "k10"));
+        assertCommandEquals(1, array("sadd", "set1", "k10"));
+        assertCommandEquals(1, array("smove", "set1", "move_set1", "k10"));
+        assertCommandEquals(1, array("sismember", "move_set1", "k10"));
+        assertCommandEquals(1, array("sadd", "set1", "k10"));
+        assertCommandEquals(1, array("smove", "set1", "move_set1", "k10"));
+        // SPOP SRANDMEMBER
+        assertCommandEquals(3, array("sadd", "set5", "k1", "k2", "k3", "k4"));
+        exec(array("srandmember", "set5"));
+        exec(array("srandmember", "set5", "2"));
+        exec(array("srandmember", "set5", "10"));
+        exec(array("srandmember", "set5", "-2"));
+        exec(array("srandmember", "set5", "0"));
+        assertCommandEquals(4, array("scard", "set5"));
+        exec(array("spop", "set5"));
+        assertCommandEquals(3, array("scard", "set5"));
+        exec(array("spop", "set5", "10"));
+        assertCommandEquals(0, array("scard", "set5"));
+        // SREM
+        assertCommandEquals(3, array("sadd", "set5", "k1", "k2", "k3", "k4"));
+        assertCommandEquals(0, array("srem", "set5", "k10"));
+        assertCommandEquals(1, array("srem", "set5", "k1"));
+        assertCommandEquals(2, array("srem", "set5", "k2", "k3", "k1"));
+        // SSCAN
+        assertCommandEquals(3, array("sadd", "set6", "k1", "k2", "k3", "k4", "k5"));
+
+        // SUNION SUNIONSTORE
+
         // error
         assertCommandOK(array("set", "str1", "str1"));
         assertCommandError(array("sadd", "str1", "k1"));
@@ -920,7 +953,23 @@ public class TestCommandExecutor {
         assertCommandError(array("sinter", "set2", "set1", "str1"));
         assertCommandError(array("sinterstore", "inter_set1"));
         assertCommandError(array("sinterstore", "inter_set1", "str1"));
-
+        assertCommandError(array("sismember", "str1", "k1"));
+        assertCommandError(array("sismember"));
+        assertCommandError(array("sismember", "set1", "k1", "k2"));
+        assertCommandError(array("smove", "set1", "set2"));
+        assertCommandError(array("smove", "set1", "str1", "k1"));
+        assertCommandError(array("smove", "set1", "set2", "k1", "k2"));
+        assertCommandError(array("srandmember", "str1"));
+        assertCommandError(array("srandmember"));
+        assertCommandError(array("srandmember", "set5", "aaa"));
+        assertCommandError(array("srandmember", "set5", "5", "11"));
+        assertCommandError(array("spop", "set5", "-1"));
+        assertCommandError(array("spop", "set5", "a"));
+        assertCommandError(array("spop", "set5", "1", "1"));
+        assertCommandError(array("spop", "set5"));
+        assertCommandError(array("spop", "str1"));
+        assertCommandError(array("srem", "set5"));
+        assertCommandError(array("srem", "str1", "v1"));
     }
 
 }

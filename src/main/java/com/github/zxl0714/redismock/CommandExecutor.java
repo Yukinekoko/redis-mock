@@ -155,6 +155,8 @@ public class CommandExecutor {
         register("sdiffstore", new SDIFFSTOREExecutor(), true);
         register("sinter", new SINTERExecutor(), true);
         register("sinterstore", new SINTERSTOREExecutor(), true);
+        register("sismember", new SISMEMBERExecutor(), true);
+        register("smove", new SMOVEExecutor(), true);
 
     }
 
