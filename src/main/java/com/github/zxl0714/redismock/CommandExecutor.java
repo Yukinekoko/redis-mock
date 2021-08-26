@@ -153,7 +153,8 @@ public class CommandExecutor {
         register("smembers", new SMEMBERSExecutor(), true);
         register("sdiff", new SDIFFExecutor(), true);
         register("sdiffstore", new SDIFFSTOREExecutor(), true);
-
+        register("sinter", new SINTERExecutor(), true);
+        register("sinterstore", new SINTERSTOREExecutor(), true);
 
     }
 
