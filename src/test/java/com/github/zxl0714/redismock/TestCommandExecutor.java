@@ -925,15 +925,21 @@ public class TestCommandExecutor {
         assertCommandNull(array("srandmember", "set5"));
         assertCommandEquals(0, array("scard", "set5"));
         // SREM
-        assertCommandEquals(3, array("sadd", "set5", "k1", "k2", "k3", "k4"));
+        assertCommandEquals(4, array("sadd", "set5", "k1", "k2", "k3", "k4"));
         assertCommandEquals(0, array("srem", "set5", "k10"));
         assertCommandEquals(1, array("srem", "set5", "k1"));
         assertCommandEquals(2, array("srem", "set5", "k2", "k3", "k1"));
-        // SSCAN
-        assertCommandEquals(3, array("sadd", "set6", "k1", "k2", "k3", "k4", "k5"));
-
+        // SSCAN TODO
+        assertCommandEquals(5, array("sadd", "set6", "k1", "k2", "k3", "k4", "k5"));
         // SUNION SUNIONSTORE
-
+        assertEquals(array("k2", "k3", "k4"), exec(array("sunion", "set2")));
+        assertEquals(array("k2", "k3", "k4"), exec(array("sunion", "set2", "set0")));
+        assertEquals(array("k2", "k3", "k4", "k5", "k7"), exec(array("sunion", "set2", "set3")));
+        assertEquals(array("k1", "k2", "k3", "k4", "k5", "k6", "k7"), exec(array("sunion", "set1", "set2", "set3")));
+        assertEquals(array(), exec(array("sunion", "set0", "set00", "set000")));
+        assertCommandEquals(0, array("sunionstore", "union_set1", "set0", "set00"));
+        assertCommandEquals(5, array("sunionstore", "union_set1", "set2", "set3"));
+        assertCommandEquals(7, array("sunionstore", "union_set1", "set2", "set3", "set1"));
         // error
         assertCommandOK(array("set", "str1", "str1"));
         assertCommandError(array("sadd", "str1", "k1"));
@@ -971,6 +977,11 @@ public class TestCommandExecutor {
         assertCommandError(array("spop", "str1"));
         assertCommandError(array("srem", "set5"));
         assertCommandError(array("srem", "str1", "v1"));
+        assertCommandError(array("sunion", "str1", "set1"));
+        assertCommandError(array("sunion", "set1", "str1"));
+        assertCommandError(array("sunion"));
+        assertCommandError(array("sunionstore", "union_set1", "str1"));
+        assertCommandError(array("sunionstore", "union_set1"));
     }
 
 }

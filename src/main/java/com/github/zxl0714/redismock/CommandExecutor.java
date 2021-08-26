@@ -159,6 +159,9 @@ public class CommandExecutor {
         register("smove", new SMOVEExecutor(), true);
         register("spop", new SPOPExecutor(), true);
         register("srandmember", new SRANDMEMBERExecutor(), true);
+        register("srem", new SREMExecutor(), true);
+        register("sunion", new SUNIONExecutor(), true);
+        register("sunionstore", new SUNIONSTOREExecutor(), true);
 
     }
 
