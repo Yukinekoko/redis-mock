@@ -162,6 +162,7 @@ public class CommandExecutor {
         register("srem", new SREMExecutor(), true);
         register("sunion", new SUNIONExecutor(), true);
         register("sunionstore", new SUNIONSTOREExecutor(), true);
+        register("sscan", new SSCANExecutor(), true);
 
     }
 

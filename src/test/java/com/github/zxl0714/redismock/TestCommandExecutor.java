@@ -930,7 +930,22 @@ public class TestCommandExecutor {
         assertCommandEquals(1, array("srem", "set5", "k1"));
         assertCommandEquals(2, array("srem", "set5", "k2", "k3", "k1"));
         // SSCAN TODO
+        assertEquals("*2\r\n$1\r\n0\r\n*-1\r\n",
+            exec(array("sscan", "set6", "0")));
         assertCommandEquals(5, array("sadd", "set6", "k1", "k2", "k3", "k4", "k5"));
+        assertEquals("*2\r\n$1\r\n3\r\n*3\r\n" +
+                "$2\r\nk2\r\n$2\r\nk3\r\n" +
+                "$2\r\nk4\r\n",
+            exec(array("sscan", "set6", "0", "count", "3")));
+        assertEquals("*2\r\n$1\r\n0\r\n*2\r\n" +
+                "$2\r\nk5\r\n$2\r\nk1\r\n",
+            exec(array("sscan", "set6", "3", "count", "3")));
+        assertEquals("*2\r\n$1\r\n0\r\n*1\r\n" +
+                "$2\r\nk1\r\n",
+            exec(array("sscan", "set6", "0", "count", "5", "match", "k1")));
+        assertEquals("*2\r\n$1\r\n0\r\n*1\r\n" +
+                "$2\r\nk1\r\n",
+            exec(array("sscan", "set6", "0", "count", "5", "match", "*1")));
         // SUNION SUNIONSTORE
         assertEquals(array("k2", "k3", "k4"), exec(array("sunion", "set2")));
         assertEquals(array("k2", "k3", "k4"), exec(array("sunion", "set2", "set0")));
@@ -982,6 +997,17 @@ public class TestCommandExecutor {
         assertCommandError(array("sunion"));
         assertCommandError(array("sunionstore", "union_set1", "str1"));
         assertCommandError(array("sunionstore", "union_set1"));
+        assertCommandError(array("sscan", "str1", "0"));
+        assertCommandError(array("sscan", "set1"));
+        assertCommandError(array("sscan", "set1", "-1"));
+        assertCommandError(array("sscan", "set1", "abc"));
+        assertCommandError(array("sscan", "set1", "0", "count", "0"));
+        assertCommandError(array("sscan", "set1", "0", "count", "-1"));
+        assertCommandError(array("sscan", "set1", "0", "count", "abc"));
+        assertCommandError(array("sscan", "set1", "0", "count"));
+        assertCommandError(array("sscan", "set1", "0", "baba", "0"));
+        assertCommandError(array("sscan", "set1", "0", "count", "1", "match"));
+        assertCommandError(array("sscan", "set1", "0", "count", "1", "match", "*", "a"));
     }
 
 }
