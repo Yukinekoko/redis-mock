@@ -911,7 +911,7 @@ public class TestCommandExecutor {
         assertCommandEquals(1, array("sadd", "set1", "k10"));
         assertCommandEquals(1, array("smove", "set1", "move_set1", "k10"));
         // SPOP SRANDMEMBER
-        assertCommandEquals(3, array("sadd", "set5", "k1", "k2", "k3", "k4"));
+        assertCommandEquals(4, array("sadd", "set5", "k1", "k2", "k3", "k4"));
         exec(array("srandmember", "set5"));
         exec(array("srandmember", "set5", "2"));
         exec(array("srandmember", "set5", "10"));
@@ -921,6 +921,8 @@ public class TestCommandExecutor {
         exec(array("spop", "set5"));
         assertCommandEquals(3, array("scard", "set5"));
         exec(array("spop", "set5", "10"));
+        assertCommandNull(array("spop", "set5"));
+        assertCommandNull(array("srandmember", "set5"));
         assertCommandEquals(0, array("scard", "set5"));
         // SREM
         assertCommandEquals(3, array("sadd", "set5", "k1", "k2", "k3", "k4"));
@@ -966,7 +968,6 @@ public class TestCommandExecutor {
         assertCommandError(array("spop", "set5", "-1"));
         assertCommandError(array("spop", "set5", "a"));
         assertCommandError(array("spop", "set5", "1", "1"));
-        assertCommandError(array("spop", "set5"));
         assertCommandError(array("spop", "str1"));
         assertCommandError(array("srem", "set5"));
         assertCommandError(array("srem", "str1", "v1"));
