@@ -165,6 +165,7 @@ public class CommandExecutor {
         register("sscan", new SSCANExecutor(), true);
         // keys
         register("move", new MOVEExecutor(), true);
+        register("persist", new PERSISTExecutor(), true);
 
     }
 
