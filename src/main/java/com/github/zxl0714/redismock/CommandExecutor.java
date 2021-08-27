@@ -163,6 +163,8 @@ public class CommandExecutor {
         register("sunion", new SUNIONExecutor(), true);
         register("sunionstore", new SUNIONSTOREExecutor(), true);
         register("sscan", new SSCANExecutor(), true);
+        // keys
+        register("move", new MOVEExecutor(), true);
 
     }
 

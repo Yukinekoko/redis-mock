@@ -48,8 +48,13 @@ public class RedisBase {
 
     @Nullable
     public synchronized Slice rawGet(Slice key) {
+        return rawGet(key, selectIndex());
+    }
+
+    @Nullable
+    public synchronized Slice rawGet(Slice key, int index) {
         Preconditions.checkNotNull(key);
-        RedisDataBase dataBase = selectDataBase();
+        RedisDataBase dataBase = dataBases[index];
         Long deadline = dataBase.getDeadlines().get(key);
         if (deadline != null && deadline != -1 && deadline <= System.currentTimeMillis()) {
             dataBase.getBase().remove(key);

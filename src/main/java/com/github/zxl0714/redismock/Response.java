@@ -15,6 +15,7 @@ public class Response {
     public static final Slice NULL = new Slice("$-1\r\n");
     public static final Slice EMPTY_LIST = new Slice("*-1\r\n");
     public static final Slice EMPTY_STRING = new Slice("$0\r\n");
+    public static final Slice NONE = new Slice("+none\r\n");
 
     private Response() {}
 

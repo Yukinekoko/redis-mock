@@ -119,6 +119,14 @@ public class TestCommandExecutor {
         }
     }
 
+    private void assertCommandNONE(String command) throws ParseErrorException, EOFException {
+        try {
+            assertEquals(Response.NONE, executor.execCommand(parse(command), socket));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void assertCommandError(String command) throws ParseErrorException, EOFException {
         try {
             assertEquals('-', executor.execCommand(parse(command), socket).data()[0]);
@@ -1009,5 +1017,102 @@ public class TestCommandExecutor {
         assertCommandError(array("sscan", "set1", "0", "count", "1", "match"));
         assertCommandError(array("sscan", "set1", "0", "count", "1", "match", "*", "a"));
     }
+
+    @Test
+    public void testMove() throws ParseErrorException, EOFException {
+        assertCommandOK(array("select", "0"));
+        assertCommandEquals(0, array("move", "str1", "1"));
+        assertCommandOK(array("set", "str1", "s1"));
+        assertCommandOK(array("set", "str2", "s2"));
+        assertCommandEquals(1, array("move", "str1", "1"));
+        assertCommandNull(array("get", "str1"));
+        assertCommandOK(array("select", "1"));
+        assertCommandEquals("s1", array("get", "str1"));
+        assertCommandOK(array("set", "str2", "ss2"));
+        assertCommandEquals(0, array("move", "str12", "0"));
+        assertCommandOK(array("select", "0"));
+        assertCommandEquals("s2", array("get", "str2"));
+        //error
+        assertCommandError(array("move", "str1", "abc"));
+        assertCommandError(array("move", "str1", "20"));
+        assertCommandError(array("move", "str1", "-10"));
+        assertCommandError(array("move", "str1", "0"));
+        assertCommandError(array("move", "str1"));
+        assertCommandError(array("move", "str1", "1", "1"));
+    }
+
+    @Test
+    public void testPersist() throws ParseErrorException, EOFException {
+        assertCommandOK(array("set", "k1", "k1"));
+        assertCommandEquals(1, array("expire", "k1", "5"));
+        assertCommandEquals(5, array("ttl", "k1"));
+        assertCommandEquals(1, array("persist", "k1"));
+        assertCommandEquals(-1, array("ttl", "k1"));
+        assertCommandEquals(0, array("persist", "k1"));
+        // error
+        assertCommandError(array("persist"));
+        assertCommandError(array("persist", "k1", "k2"));
+    }
+
+    @Test
+    public void testRandomkey() throws ParseErrorException, EOFException {
+        assertCommandNull(array("randomkey"));
+        assertCommandOK(array("set", "k1", "k1"));
+        assertCommandEquals("k1", array("randomkey"));
+        // error
+        assertCommandError(array("randomkey", "aaa"));
+    }
+
+    @Test
+    public void testRename() throws ParseErrorException, EOFException {
+        assertCommandOK(array("set", "k1", "k1"));
+        assertCommandOK(array("rename", "k1", "k2"));
+        assertEquals("k1", array("get", "k2"));
+        assertCommandNull(array("get", "k1"));
+        assertCommandOK(array("set", "k1", "newk"));
+        assertCommandOK(array("rename", "k1", "k2"));
+        assertEquals("newk", array("get", "k2"));
+        // error
+        assertCommandError(array("rename", "k3", "k2"));
+        assertCommandError(array("rename", "k3", "k2", "k3"));
+        assertCommandError(array("rename", "k3"));
+    }
+
+    @Test
+    public void testRenamenx() throws ParseErrorException, EOFException {
+        assertCommandOK(array("set", "k1", "k1"));
+        assertCommandEquals(1, array("renamenx", "k1", "k2"));
+        assertCommandOK(array("set", "k1", "nk"));
+        assertCommandEquals(0, array("renamenx", "k1", "k2"));
+        assertCommandEquals("nk", array("get", "k1"));
+        assertCommandEquals("k2", array("get", "k2"));
+        // error
+        assertCommandError(array("renamenx", "k3", "k2"));
+        assertCommandError(array("renamenx", "k3", "k2", "k3"));
+        assertCommandError(array("renamenx", "k3"));
+    }
+
+    @Test
+    public void testType() throws ParseErrorException, EOFException {
+        assertCommandOK(array("set", "s1", "s1"));
+        assertCommandEquals(1, array("lpush", "l1", "l1"));
+        assertCommandEquals(1, array("sadd", "set1", "set1"));
+        assertCommandEquals(1, array("hset", "h1", "h1"));
+        // TODO : (snowmeow:2021/8/27) zset,stream
+        assertCommandNONE(array("type", "s0"));
+        assertCommandEquals("string", array("type", "s1"));
+        assertCommandEquals("list", array("type", "l1"));
+        assertCommandEquals("set", array("type", "set1"));
+        assertCommandEquals("hash", array("type", "h1"));
+        // error
+        assertCommandError(array("type"));
+        assertCommandError(array("type", "a", "b"));
+    }
+
+    @Test
+    public void testScan() {
+
+    }
+
 
 }
