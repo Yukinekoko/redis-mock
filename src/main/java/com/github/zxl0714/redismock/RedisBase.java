@@ -64,6 +64,21 @@ public class RedisBase {
         return dataBase.getBase().get(key);
     }
 
+    public synchronized List<Slice> rawKeys() {
+        RedisDataBase dataBase = selectDataBase();
+        List<Slice> keys = new ArrayList<>();
+        for(Map.Entry<Slice, Slice> entry : dataBase.getBase().entrySet()) {
+            Long deadline = dataBase.getDeadlines().get(entry.getKey());
+            if (deadline != null && deadline != -1 && deadline <= System.currentTimeMillis()) {
+                dataBase.getBase().remove(entry.getKey());
+                dataBase.getDeadlines().remove(entry.getKey());
+            }else {
+                keys.add(entry.getKey());
+            }
+        }
+        return keys;
+    }
+
     public synchronized List<Slice> rawKeys(Slice pattern) {
         RedisDataBase dataBase = selectDataBase();
         KeyPattern p = new KeyPattern(pattern);
@@ -134,6 +149,16 @@ public class RedisBase {
             return 1L;
         }
         return 0L;
+    }
+
+    public synchronized long getDeadLine(Slice key) {
+        Preconditions.checkNotNull(key);
+        RedisDataBase dataBase = dataBases[selectIndex()];
+        Long ttl = dataBase.getDeadlines().get(key);
+        if (ttl == null) {
+            throw new IllegalArgumentException("deadLine key is null");
+        }
+        return ttl;
     }
 
     public synchronized void rawPut(Slice key, Slice value, @Nullable Long ttl) {

@@ -937,7 +937,7 @@ public class TestCommandExecutor {
         assertCommandEquals(0, array("srem", "set5", "k10"));
         assertCommandEquals(1, array("srem", "set5", "k1"));
         assertCommandEquals(2, array("srem", "set5", "k2", "k3", "k1"));
-        // SSCAN TODO
+        // SSCAN
         assertEquals("*2\r\n$1\r\n0\r\n*-1\r\n",
             exec(array("sscan", "set6", "0")));
         assertCommandEquals(5, array("sadd", "set6", "k1", "k2", "k3", "k4", "k5"));
@@ -1067,11 +1067,11 @@ public class TestCommandExecutor {
     public void testRename() throws ParseErrorException, EOFException {
         assertCommandOK(array("set", "k1", "k1"));
         assertCommandOK(array("rename", "k1", "k2"));
-        assertEquals("k1", array("get", "k2"));
+        assertCommandEquals("k1", array("get", "k2"));
         assertCommandNull(array("get", "k1"));
         assertCommandOK(array("set", "k1", "newk"));
         assertCommandOK(array("rename", "k1", "k2"));
-        assertEquals("newk", array("get", "k2"));
+        assertCommandEquals("newk", array("get", "k2"));
         // error
         assertCommandError(array("rename", "k3", "k2"));
         assertCommandError(array("rename", "k3", "k2", "k3"));
@@ -1085,7 +1085,7 @@ public class TestCommandExecutor {
         assertCommandOK(array("set", "k1", "nk"));
         assertCommandEquals(0, array("renamenx", "k1", "k2"));
         assertCommandEquals("nk", array("get", "k1"));
-        assertCommandEquals("k2", array("get", "k2"));
+        assertCommandEquals("k1", array("get", "k2"));
         // error
         assertCommandError(array("renamenx", "k3", "k2"));
         assertCommandError(array("renamenx", "k3", "k2", "k3"));
@@ -1097,7 +1097,7 @@ public class TestCommandExecutor {
         assertCommandOK(array("set", "s1", "s1"));
         assertCommandEquals(1, array("lpush", "l1", "l1"));
         assertCommandEquals(1, array("sadd", "set1", "set1"));
-        assertCommandEquals(1, array("hset", "h1", "h1"));
+        assertCommandEquals(1, array("hset", "h1", "h1", "h1"));
         // TODO : (snowmeow:2021/8/27) zset,stream
         assertCommandNONE(array("type", "s0"));
         assertCommandEquals("string", array("type", "s1"));
@@ -1110,8 +1110,47 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testScan() {
+    public void testScan() throws ParseErrorException, EOFException, IOException {
+        assertCommandOK(array("set", "s1", "s1"));
+        assertCommandOK(array("set", "s2", "s2"));
+        assertCommandOK(array("set", "s3", "s3"));
+        assertCommandOK(array("set", "s4", "s4"));
+        assertCommandOK(array("set", "s5", "s5"));
+        assertCommandOK(array("set", "s11", "s11"));
 
+        assertEquals("*2\r\n$1\r\n0\r\n*6\r\n" +
+            "$2\r\ns2\r\n$3\r\ns11\r\n" +
+            "$2\r\ns3\r\n$2\r\ns4\r\n" +
+            "$2\r\ns5\r\n$2\r\ns1\r\n",
+            exec(array("scan", "0")));
+        assertEquals("*2\r\n$1\r\n3\r\n*3\r\n" +
+                "$2\r\ns2\r\n$3\r\ns11\r\n" +
+                "$2\r\ns3\r\n",
+            exec(array("scan", "0", "count", "3")));
+        assertEquals("*2\r\n$1\r\n0\r\n*3\r\n" +
+                "$2\r\ns4\r\n$2\r\ns5\r\n" +
+                "$2\r\ns1\r\n",
+            exec(array("scan", "3", "count", "3")));
+        assertEquals("*2\r\n$1\r\n3\r\n*3\r\n" +
+                "$2\r\ns2\r\n$3\r\ns11\r\n" +
+                "$2\r\ns3\r\n",
+            exec(array("scan", "0", "count", "3", "match", "s*")));
+        assertEquals("*2\r\n$1\r\n3\r\n*1\r\n" +
+                "$3\r\ns11\r\n",
+            exec(array("scan", "0", "count", "3", "match", "s1*")));
+        assertEquals("*2\r\n$1\r\n0\r\n*1\r\n" +
+                "$2\r\ns1\r\n",
+            exec(array("scan", "3", "count", "3", "match", "s1*")));
+
+        // error
+        assertCommandError(array("scan", "-1"));
+        assertCommandError(array("scan", "0", "count", "0"));
+        assertCommandError(array("scan", "0", "count", "-1"));
+        assertCommandError(array("scan", "0", "count", "abc"));
+        assertCommandError(array("scan", "0", "count"));
+        assertCommandError(array("scan", "0", "baba", "3"));
+        assertCommandError(array("scan", "0", "count", "3", "match"));
+        assertCommandError(array("scan", "0", "count", "3", "match", "*", "abc"));
     }
 
 

@@ -166,6 +166,11 @@ public class CommandExecutor {
         // keys
         register("move", new MOVEExecutor(), true);
         register("persist", new PERSISTExecutor(), true);
+        register("randomkey", new RANDOMKEYExecutor(), true);
+        register("rename", new RENAMEExecutor(), true);
+        register("renamenx", new RENAMENXExecutor(), true);
+        register("type", new TYPEExecutor(), true);
+        register("scan", new SCANExecutor(), true);
 
     }
 
