@@ -5,6 +5,8 @@ import com.github.zxl0714.redismock.executor.hash.*;
 import com.github.zxl0714.redismock.executor.list.*;
 import com.github.zxl0714.redismock.executor.set.*;
 import com.github.zxl0714.redismock.executor.str.*;
+import com.github.zxl0714.redismock.executor.zset.ZADDExecutor;
+import com.github.zxl0714.redismock.executor.zset.ZSCOREExecutor;
 import com.github.zxl0714.redismock.expecptions.*;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -171,6 +173,9 @@ public class CommandExecutor {
         register("renamenx", new RENAMENXExecutor(), true);
         register("type", new TYPEExecutor(), true);
         register("scan", new SCANExecutor(), true);
+        // zset
+        register("zadd", new ZADDExecutor(), true);
+        register("zscore", new ZSCOREExecutor(), true);
 
     }
 

@@ -1,9 +1,10 @@
-package com.github.zxl0714.redismock;
+package com.github.zxl0714.redismock.executor;
 
+import com.github.zxl0714.redismock.*;
 import com.github.zxl0714.redismock.expecptions.EOFException;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
-import com.github.zxl0714.redismock.expecptions.UnsupportedScriptCommandException;
 import com.github.zxl0714.redismock.parser.RedisCommandParser;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,23 +22,23 @@ import static org.mockito.Mockito.*;
  */
 public class TestCommandExecutor {
 
-    private static final String CRLF = "\r\n";
-    
-    private static CommandExecutor executor;
-    
-    private Socket socket;
-    
-    private ByteArrayOutputStream outputStream;
+    protected static final String CRLF = "\r\n";
 
-    private static String bulkString(CharSequence param) {
+    protected static CommandExecutor executor;
+
+    protected Socket socket;
+
+    protected ByteArrayOutputStream outputStream;
+
+    protected static String bulkString(CharSequence param) {
         return "$" + param.length() + CRLF + param.toString() + CRLF;
     }
 
-    private static String bulkLong(Long param) {
+    protected static String bulkLong(Long param) {
         return ":" + param + CRLF;
     }
 
-    private static String array(CharSequence ...params) {
+    protected static String array(CharSequence ...params) {
         StringBuilder builder = new StringBuilder();
         builder.append('*').append(params.length).append(CRLF);
         for (CharSequence param : params) {
@@ -53,7 +54,7 @@ public class TestCommandExecutor {
     /**
      * 构造响应的列表
      * */
-    private static String responseArray(Object ...params) {
+    protected static String responseArray(Object ...params) {
         StringBuilder builder = new StringBuilder();
         builder.append('*').append(params.length).append(CRLF);
         for (Object param : params) {
@@ -70,16 +71,16 @@ public class TestCommandExecutor {
         return builder.toString();
     }
 
-    private RedisCommand parse(String command) throws ParseErrorException, EOFException {
+    protected RedisCommand parse(String command) throws ParseErrorException, EOFException {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(command.getBytes());
         return RedisCommandParser.parse(inputStream);
     }
 
-    private String exec(String command) throws ParseErrorException, EOFException, IOException {
+    protected String exec(String command) throws ParseErrorException, EOFException, IOException {
         return executor.execCommand(parse(command), socket).toString();
     }
 
-    private void assertCommandEquals(String expect, String command) throws ParseErrorException, EOFException {
+    protected void assertCommandEquals(String expect, String command) throws ParseErrorException, EOFException {
         try {
             assertEquals(bulkString(expect), executor.execCommand(parse(command), socket).toString());
         } catch (IOException e) {
@@ -95,15 +96,15 @@ public class TestCommandExecutor {
         }
     }
 
-    private void assertCommandEquals(long expect, String command) throws ParseErrorException, EOFException {
+    protected void assertCommandEquals(long expect, String command) throws ParseErrorException, EOFException {
         try {
-            assertEquals(Response.integer(expect), executor.execCommand(parse(command), socket));
+            Assert.assertEquals(Response.integer(expect), executor.execCommand(parse(command), socket));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void assertCommandNull(String command) throws ParseErrorException, EOFException {
+    protected void assertCommandNull(String command) throws ParseErrorException, EOFException {
         try {
             assertEquals(Response.NULL, executor.execCommand(parse(command), socket));
         } catch (IOException e) {
@@ -111,7 +112,7 @@ public class TestCommandExecutor {
         }
     }
 
-    private void assertCommandOK(String command) throws ParseErrorException, EOFException {
+    protected void assertCommandOK(String command) throws ParseErrorException, EOFException {
         try {
             assertEquals(Response.OK, executor.execCommand(parse(command), socket));
         } catch (IOException e) {
@@ -119,7 +120,7 @@ public class TestCommandExecutor {
         }
     }
 
-    private void assertCommandNONE(String command) throws ParseErrorException, EOFException {
+    protected void assertCommandNONE(String command) throws ParseErrorException, EOFException {
         try {
             assertEquals(Response.NONE, executor.execCommand(parse(command), socket));
         } catch (IOException e) {
@@ -127,7 +128,7 @@ public class TestCommandExecutor {
         }
     }
 
-    private void assertCommandError(String command) throws ParseErrorException, EOFException {
+    protected void assertCommandError(String command) throws ParseErrorException, EOFException {
         try {
             assertEquals('-', executor.execCommand(parse(command), socket).data()[0]);
         } catch (IOException e) {
