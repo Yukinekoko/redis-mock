@@ -179,6 +179,7 @@ public class CommandExecutor {
         register("zcount", new ZCOUNTExecutor(), true);
         register("zincrby", new ZINCRBYExecutor(), true);
         register("zinterstore", new ZINTERSTOREExecutor(), true);
+        register("zunionstore", new ZUNIONSTOREExecutor(), true);
 
     }
 

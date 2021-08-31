@@ -111,6 +111,32 @@ public class TestZSET extends TestCommandExecutor {
         assertCommandError(array("zinterstore", "inter3", "3", "zset1", "zset2", "aggregate", "aaa"));
 
     }
+    
+    @Test
+    public void testZunionstore() throws ParseErrorException, EOFException {
+        init();
+        assertCommandEquals(3, array("zadd", "zset2", "2", "z5",
+            "-3", "z2", "3.1", "z3"));
+        assertCommandEquals(4, array("zunionstore", "union1", "2", "zset1", "zset2"));
+        assertCommandEquals("-1", array("zscore", "union1", "z2"));
+        assertCommandEquals("1.98999999999999999", array("zscore", "union1", "z3"));
+        assertCommandEquals("1", array("zscore", "union1", "z1"));
+        assertCommandEquals("2", array("zscore", "union1", "z5"));
+        assertCommandEquals(4, array("zunionstore", "union2", "2", "zset1", "zset2", "weights",
+            "1", "3"));
+        assertCommandEquals("-7", array("zscore", "union2", "z2"));
+        assertCommandEquals("6", array("zscore", "union2", "z5"));
+        assertCommandEquals(4, array("zunionstore", "union3", "2", "zset1", "zset2", "aggregate", "min"));
+        assertCommandEquals("-3", array("zscore", "union3", "z2"));
+        assertCommandEquals("-1.1100000000000001", array("zscore", "union3", "z3"));
+        assertCommandEquals("2", array("zscore", "union3", "z5"));
+        // error
+        assertCommandError(array("zunionstore", "union3", "2", "s1", "zset2", "aggregate", "min"));
+        assertCommandError(array("zunionstore", "union3", "3", "zset1", "zset2"));
+        assertCommandError(array("zunionstore", "union3", "3", "zset1", "zset2", "weights", "a", "a"));
+        assertCommandError(array("zunionstore", "union3", "3", "zset1", "zset2", "weights", "1"));
+        assertCommandError(array("zunionstore", "union3", "3", "zset1", "zset2", "aggregate", "aaa"));
+    }
 
     protected void init() throws ParseErrorException, EOFException {
         assertCommandOK(array("set", "s1", "s1"));
