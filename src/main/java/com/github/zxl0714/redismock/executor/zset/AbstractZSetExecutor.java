@@ -7,7 +7,7 @@ import com.github.zxl0714.redismock.executor.AbstractExecutor;
 import com.github.zxl0714.redismock.expecptions.InternalException;
 import com.github.zxl0714.redismock.expecptions.WrongValueTypeException;
 
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * @author snowmeow (yuki754685421@163.com)
@@ -15,9 +15,11 @@ import java.util.HashMap;
  */
 public abstract class AbstractZSetExecutor extends AbstractExecutor {
 
-    public HashMap<Slice, Double> getZSet(RedisBase base, Slice key) throws WrongValueTypeException {
+    private Comparator<Map.Entry<Slice, Double>> cmp = (o1, o2) -> (int) (o1.getValue() - o2.getValue());
+
+    public ZSet getZSet(RedisBase base, Slice key) throws WrongValueTypeException {
         Slice data = base.rawGet(key);
-        HashMap<Slice, Double> zset;
+        ZSet zset;
         if (data != null) {
             try {
                 zset = Utils.deserializeObject(data);
@@ -25,12 +27,12 @@ public abstract class AbstractZSetExecutor extends AbstractExecutor {
                 throw new WrongValueTypeException("WRONGTYPE Operation against a key holding the wrong kind of value");
             }
         } else {
-            zset = new HashMap<>();
+            zset = new ZSet();
         }
         return zset;
     }
 
-    public void setZSet(RedisBase base, Slice key, HashMap<Slice, Double> zset) throws InternalException {
+    public void setZSet(RedisBase base, Slice key, ZSet zset) throws InternalException {
         try {
             base.rawPut(key, Utils.serializeObject(zset), -1L);
         } catch (Exception e) {
@@ -38,49 +40,36 @@ public abstract class AbstractZSetExecutor extends AbstractExecutor {
         }
     }
 
-    static final class Node {
-
-        private Slice value;
-
-        private double score;
-
-        public Node() {
-        }
-
-        public Node(Slice value, double score) {
-            this.value = value;
-            this.score = score;
-        }
-
-        public Slice getValue() {
-            return value;
-        }
-
-        public void setValue(Slice value) {
-            this.value = value;
-        }
-
-        public double getScore() {
-            return score;
-        }
-
-        public void setScore(double score) {
-            this.score = score;
-        }
-
-        @Override
-        public int hashCode() {
-            return value.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof Node) {
-                Node nodeObj = (Node) obj;
-                return value.equals(nodeObj.getValue());
+    public List<Map.Entry<Slice, Double>> range(ZSet zSet, double min, double max, boolean opMin, boolean opMax) {
+        List<Map.Entry<Slice, Double>> list = new ArrayList<>(zSet.entrySet());
+        list.sort(cmp);
+        int start = -1;
+        int end = -1;
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).getValue() > min && start == -1) {
+                start = i;
             }
-            return false;
+            if (list.get(i).getValue() == min && start == -1 && !opMin) {
+                start = i;
+            }
+            if (list.get(i).getValue() > max) {
+                break;
+            }
+            if (list.get(i).getValue() == max && opMax) {
+                break;
+            }
+            end = i;
         }
+        if (start == -1 || end == -1) {
+            return new ArrayList<>();
+        }
+        return list.subList(start, end + 1);
+    }
+
+
+
+    static final class ZSet extends HashMap<Slice, Double> {
+
     }
 
 }

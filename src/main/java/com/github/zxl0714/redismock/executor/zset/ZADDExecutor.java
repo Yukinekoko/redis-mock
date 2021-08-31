@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author snowmeow (yuki754685421@163.com)
@@ -27,7 +28,7 @@ public class ZADDExecutor extends AbstractZSetExecutor {
         Utils.checkArgumentsNumberGreater(params,2);
 
         Slice name = params.get(0);
-        HashMap<Slice, Double> zSet = getZSet(base, name);
+        ZSet zSet = getZSet(base, name);
 
         int cur = 1;
         String mode = null;
