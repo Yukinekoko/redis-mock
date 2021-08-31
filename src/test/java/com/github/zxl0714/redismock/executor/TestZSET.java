@@ -2,6 +2,7 @@ package com.github.zxl0714.redismock.executor;
 
 import com.github.zxl0714.redismock.expecptions.EOFException;
 import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -136,6 +137,44 @@ public class TestZSET extends TestCommandExecutor {
         assertCommandError(array("zunionstore", "union3", "3", "zset1", "zset2", "weights", "a", "a"));
         assertCommandError(array("zunionstore", "union3", "3", "zset1", "zset2", "weights", "1"));
         assertCommandError(array("zunionstore", "union3", "3", "zset1", "zset2", "aggregate", "aaa"));
+    }
+
+    @Test
+    public void testZrange() throws ParseErrorException, EOFException, IOException {
+        init();
+        Assert.assertEquals(array("z3", "z1", "z2"), exec(array("zrange", "zset1", "0", "2")));
+        Assert.assertEquals(array("z3", "z1", "z2"), exec(array("zrange", "zset1", "0", "5")));
+        Assert.assertEquals(array("z3", "z1"), exec(array("zrange", "zset1", "0", "1")));
+        Assert.assertEquals("*0\r\n", exec(array("zrange", "zset1", "-1", "0")));
+        Assert.assertEquals(array("z3"), exec(array("zrange", "zset1", "0", "-3")));
+        Assert.assertEquals(array("z3", "z1"), exec(array("zrange", "zset1", "-3", "-2")));
+        Assert.assertEquals(array("z1", "1", "z2", "2"), exec(array("zrange", "zset1", "-2", "-1", "withscores")));
+        assertCommandEquals(1, array("zadd", "zset1", "1", "zz1"));
+        Assert.assertEquals(array("zz1", "1", "z2", "2"), exec(array("zrange", "zset1", "-2", "-1", "withscores")));
+        // error
+        assertCommandError(array("zrange", "s1", "0", "2"));
+        assertCommandError(array("zrange", "zset1", "abc", "2"));
+        assertCommandError(array("zrange", "zset1", "0"));
+        assertCommandError(array("zrange", "zset1", "0", "1", "2"));
+    }
+    
+    @Test
+    public void testZrevrange() throws ParseErrorException, EOFException, IOException {
+        init();
+        Assert.assertEquals(array("z2", "z1", "z3"), exec(array("zrevrange", "zset1", "0", "2")));
+        Assert.assertEquals(array("z2", "z1", "z3"), exec(array("zrevrange", "zset1", "0", "5")));
+        Assert.assertEquals(array("z2", "z1"), exec(array("zrevrange", "zset1", "0", "1")));
+        Assert.assertEquals("*0\r\n", exec(array("zrevrange", "zset1", "-1", "0")));
+        Assert.assertEquals(array("z2"), exec(array("zrevrange", "zset1", "0", "-3")));
+        Assert.assertEquals(array("z2", "z1"), exec(array("zrevrange", "zset1", "-3", "-2")));
+        Assert.assertEquals(array("z1", "1", "z3", "-1.1100000000000001"), exec(array("zrevrange", "zset1", "-2", "-1", "withscores")));
+        assertCommandEquals(1, array("zadd", "zset1", "1", "zz1"));
+        Assert.assertEquals(array("z1", "1", "z3", "-1.1100000000000001"), exec(array("zrevrange", "zset1", "-2", "-1", "withscores")));
+        // error
+        assertCommandError(array("zrevrange", "s1", "0", "2"));
+        assertCommandError(array("zrevrange", "zset1", "abc", "2"));
+        assertCommandError(array("zrevrange", "zset1", "0"));
+        assertCommandError(array("zrevrange", "zset1", "0", "1", "2"));
     }
 
     protected void init() throws ParseErrorException, EOFException {

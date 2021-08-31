@@ -51,7 +51,7 @@ public class ZCOUNTExecutor extends AbstractZSetExecutor {
             max = getDouble(new Slice(paramMax));
         }
 
-        List<Map.Entry<Slice, Double>> list = range(zSet, min, max, oiMin, oiMax);
+        List<Map.Entry<Slice, Double>> list = count(zSet, min, max, oiMin, oiMax);
         return Response.integer(list.size());
     }
 }

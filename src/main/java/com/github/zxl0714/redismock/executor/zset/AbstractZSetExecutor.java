@@ -15,7 +15,27 @@ import java.util.*;
  */
 public abstract class AbstractZSetExecutor extends AbstractExecutor {
 
-    private Comparator<Map.Entry<Slice, Double>> cmp = (o1, o2) -> (int) (o1.getValue() - o2.getValue());
+    // private Comparator<Map.Entry<Slice, Double>> cmp = (o1, o2) -> (int) (o1.getValue() - o2.getValue());
+
+    private final Comparator<Map.Entry<Slice, Double>> cmp = (o1, o2) -> {
+        if (o1.getValue() > o2.getValue()) {
+            return 1;
+        } else if (o1.getValue() < o2.getValue()) {
+            return -1;
+        } else {
+            return o1.getKey().compareTo(o2.getKey());
+        }
+    };
+
+    private final Comparator<Map.Entry<Slice, Double>> revCmp = (o1, o2) -> {
+        if (o1.getValue() > o2.getValue()) {
+            return -1;
+        } else if (o1.getValue() < o2.getValue()) {
+            return 1;
+        } else {
+            return o2.getKey().compareTo(o1.getKey());
+        }
+    };
 
     public ZSet getZSet(RedisBase base, Slice key) throws WrongValueTypeException {
         Slice data = base.rawGet(key);
@@ -40,7 +60,7 @@ public abstract class AbstractZSetExecutor extends AbstractExecutor {
         }
     }
 
-    public List<Map.Entry<Slice, Double>> range(ZSet zSet, double min, double max, boolean opMin, boolean opMax) {
+    public List<Map.Entry<Slice, Double>> count(ZSet zSet, double min, double max, boolean opMin, boolean opMax) {
         List<Map.Entry<Slice, Double>> list = new ArrayList<>(zSet.entrySet());
         list.sort(cmp);
         int start = -1;
@@ -66,7 +86,31 @@ public abstract class AbstractZSetExecutor extends AbstractExecutor {
         return list.subList(start, end + 1);
     }
 
+    public List<Map.Entry<Slice, Double>> range(ZSet zSet, int start, int end, boolean rev) {
+        if (end >= zSet.size()) {
+            end = zSet.size() - 1;
+        }
+        if (start < 0) {
+            start = zSet.size() + start;
+        }
+        if (end < 0) {
+            end = zSet.size() + end;
+        }
+        if (start > end || end < 0) {
+            return new ArrayList<>();
+        }
+        if (start < 0) {
+            start = 0;
+        }
 
+        List<Map.Entry<Slice, Double>> list = new ArrayList<>(zSet.entrySet());
+        if (rev) {
+            list.sort(revCmp);
+        } else {
+            list.sort(cmp);
+        }
+        return list.subList(start, end + 1);
+    }
 
     static final class ZSet extends HashMap<Slice, Double> {
 

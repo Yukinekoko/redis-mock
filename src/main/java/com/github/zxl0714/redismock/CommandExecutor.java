@@ -180,6 +180,8 @@ public class CommandExecutor {
         register("zincrby", new ZINCRBYExecutor(), true);
         register("zinterstore", new ZINTERSTOREExecutor(), true);
         register("zunionstore", new ZUNIONSTOREExecutor(), true);
+        register("zrange", new ZRANGEExecutor(), true);
+        register("zrevrange", new ZREVRANGEExecutor(), true);
 
     }
 
