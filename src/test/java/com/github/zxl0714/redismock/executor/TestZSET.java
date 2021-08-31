@@ -89,7 +89,26 @@ public class TestZSET extends TestCommandExecutor {
     }
 
     @Test
-    public void zInterstore() {
+    public void testZinterstore() throws ParseErrorException, EOFException {
+        init();
+        assertCommandEquals(3, array("zadd", "zset2", "2", "z5",
+            "-3", "z2", "3.1", "z3"));
+        assertCommandEquals(2, array("zinterstore", "inter1", "2", "zset1", "zset2"));
+        assertCommandEquals("-1", array("zscore", "inter1", "z2"));
+        assertCommandEquals("1.98999999999999999", array("zscore", "inter1", "z3"));
+        assertCommandEquals(2, array("zinterstore", "inter2", "2", "zset1", "zset2", "weights",
+            "1", "3"));
+        assertCommandEquals("-7", array("zscore", "inter2", "z2"));
+        assertCommandEquals(2, array("zinterstore", "inter3", "2", "zset1", "zset2", "aggregate", "min"));
+        assertCommandEquals("-3", array("zscore", "inter3", "z2"));
+        assertCommandEquals("-1.1100000000000001", array("zscore", "inter3", "z3"));
+
+        // error
+        assertCommandError(array("zinterstore", "inter3", "2", "s1", "zset2", "aggregate", "min"));
+        assertCommandError(array("zinterstore", "inter3", "3", "zset1", "zset2"));
+        assertCommandError(array("zinterstore", "inter3", "3", "zset1", "zset2", "weights", "a", "a"));
+        assertCommandError(array("zinterstore", "inter3", "3", "zset1", "zset2", "weights", "1"));
+        assertCommandError(array("zinterstore", "inter3", "3", "zset1", "zset2", "aggregate", "aaa"));
 
     }
 
