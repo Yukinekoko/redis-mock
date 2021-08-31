@@ -182,6 +182,8 @@ public class CommandExecutor {
         register("zunionstore", new ZUNIONSTOREExecutor(), true);
         register("zrange", new ZRANGEExecutor(), true);
         register("zrevrange", new ZREVRANGEExecutor(), true);
+        register("zrank", new ZRANKExecutor(), true);
+        register("zrevrank", new ZREVRANKExecutor(), true);
 
     }
 

@@ -177,6 +177,34 @@ public class TestZSET extends TestCommandExecutor {
         assertCommandError(array("zrevrange", "zset1", "0", "1", "2"));
     }
 
+    @Test
+    public void testZrank() throws ParseErrorException, EOFException {
+        init();
+        assertCommandNull(array("zrank", "zset1", "z5"));
+        assertCommandNull(array("zrank", "zset0", "z5"));
+        assertCommandEquals(0, array("zrank", "zset1", "z3"));
+        assertCommandEquals(2, array("zrank", "zset1", "z2"));
+        assertCommandEquals(1, array("zrank", "zset1", "z1"));
+        // error
+        assertCommandError(array("zrank", "s1", "z1"));
+        assertCommandError(array("zrank", "zset1"));
+        assertCommandError(array("zrank", "zset1", "s1", "s2"));
+    }
+
+    @Test
+    public void testZrevrank() throws ParseErrorException, EOFException {
+        init();
+        assertCommandNull(array("zrevrank", "zset1", "z5"));
+        assertCommandNull(array("zrevrank", "zset0", "z5"));
+        assertCommandEquals(2, array("zrevrank", "zset1", "z3"));
+        assertCommandEquals(0, array("zrevrank", "zset1", "z2"));
+        assertCommandEquals(1, array("zrevrank", "zset1", "z1"));
+        // error
+        assertCommandError(array("zrevrank", "s1", "z1"));
+        assertCommandError(array("zrevrank", "zset1"));
+        assertCommandError(array("zrevrank", "zset1", "s1", "s2"));
+    }
+
     protected void init() throws ParseErrorException, EOFException {
         assertCommandOK(array("set", "s1", "s1"));
         assertCommandEquals(1, array("zadd", "zset1", "1", "z1"));
