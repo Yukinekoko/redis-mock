@@ -3,12 +3,16 @@ package com.github.zxl0714.redismock;
 import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
 
 import java.io.*;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.List;
 
 /**
  * Created by Xiaolu on 2015/4/21.
  */
 public class Utils {
+
+    private static final DecimalFormat DF = new DecimalFormat("0.#################");
 
     public static void closeQuietly(Closeable closeable) {
         try {
@@ -59,5 +63,10 @@ public class Utils {
         oi.close();
         bi.close();
         return ret;
+    }
+
+    public static String formatDouble(double d) {
+        BigDecimal bd = new BigDecimal(d);
+        return DF.format(bd);
     }
 }

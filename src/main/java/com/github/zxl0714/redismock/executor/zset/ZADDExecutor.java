@@ -21,8 +21,6 @@ import java.util.Map;
  */
 public class ZADDExecutor extends AbstractZSetExecutor {
 
-    private static final DecimalFormat DF = new DecimalFormat("0.#################");
-
     @Override
     public Slice execute(List<Slice> params, RedisBase base, Socket socket) throws BaseException, IOException {
         Utils.checkArgumentsNumberGreater(params,2);
@@ -84,7 +82,7 @@ public class ZADDExecutor extends AbstractZSetExecutor {
         }
         setZSet(base, name, zSet);
         if (incr) {
-            return Response.bulkString(new Slice(DF.format(incrResponse)));
+            return Response.bulkString(new Slice(Utils.formatDouble(incrResponse)));
         }
         return Response.integer(response);
     }

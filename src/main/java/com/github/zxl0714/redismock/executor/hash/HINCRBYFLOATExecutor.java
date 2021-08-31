@@ -20,13 +20,10 @@ import java.util.Map;
  */
 public class HINCRBYFLOATExecutor extends AbstractHashExecutor {
 
-    private static final DecimalFormat DF = new DecimalFormat("0.#################");
-
     @Override
     public Slice execute(List<Slice> params, RedisBase base, Socket socket) throws BaseException, IOException {
         Utils.checkArgumentsNumberEquals(params, 3);
 
-        BigDecimal bd;
         Slice name = params.get(0);
         Slice key = params.get(1);
         Map<Slice, Slice> map = getMap(base, name);
@@ -39,8 +36,7 @@ public class HINCRBYFLOATExecutor extends AbstractHashExecutor {
         if (incr == Double.NEGATIVE_INFINITY || incr == Double.POSITIVE_INFINITY) {
             throw new WrongValueTypeException("ERR increment would produce NaN or Infinity");
         }
-        bd = new BigDecimal(incr);
-        value = new Slice(DF.format(bd));
+        value = new Slice(Utils.formatDouble(incr));
         map.put(key, value);
         setMap(base, name, map);
         return Response.bulkString(value);

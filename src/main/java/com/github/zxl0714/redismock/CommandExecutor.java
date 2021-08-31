@@ -5,10 +5,7 @@ import com.github.zxl0714.redismock.executor.hash.*;
 import com.github.zxl0714.redismock.executor.list.*;
 import com.github.zxl0714.redismock.executor.set.*;
 import com.github.zxl0714.redismock.executor.str.*;
-import com.github.zxl0714.redismock.executor.zset.ZADDExecutor;
-import com.github.zxl0714.redismock.executor.zset.ZCARDExecutor;
-import com.github.zxl0714.redismock.executor.zset.ZCOUNTExecutor;
-import com.github.zxl0714.redismock.executor.zset.ZSCOREExecutor;
+import com.github.zxl0714.redismock.executor.zset.*;
 import com.github.zxl0714.redismock.expecptions.*;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -180,6 +177,7 @@ public class CommandExecutor {
         register("zscore", new ZSCOREExecutor(), true);
         register("zcard", new ZCARDExecutor(), true);
         register("zcount", new ZCOUNTExecutor(), true);
+        register("zincrby", new ZINCRBYExecutor(), true);
 
     }
 

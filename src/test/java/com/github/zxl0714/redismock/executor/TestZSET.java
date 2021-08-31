@@ -67,25 +67,25 @@ public class TestZSET extends TestCommandExecutor {
         assertCommandEquals(0, array("zcount", "zset1", "+inf", "+inf"));
         // error
         assertCommandError(array("zcount", "s1", "+inf", "-inf"));
-        assertCommandError(array("zcount", "set1", "(+inf", "-inf)"));
-        assertCommandError(array("zcount", "set1", "-inf", "+inf", "1"));
-        assertCommandError(array("zcount", "set1", "-inf"));
-        assertCommandError(array("zcount", "set1", "aaa", "2"));
+        assertCommandError(array("zcount", "zset1", "(+inf", "-inf)"));
+        assertCommandError(array("zcount", "zset1", "-inf", "+inf", "1"));
+        assertCommandError(array("zcount", "zset1", "-inf"));
+        assertCommandError(array("zcount", "zset1", "aaa", "2"));
     }
 
     @Test
     public void testZincrby() throws ParseErrorException, EOFException {
         init();
-        assertCommandEquals("1", array("zscore", "set1", "z1"));
-        assertCommandEquals("3", array("zincrby", "set1", "z1", "2"));
-        assertCommandEquals("0", array("zincrby", "set1", "z1", "-3"));
-        assertCommandEquals("-3", array("zincrby", "set1", "z2", "-3"));
-        assertCommandEquals("-1.21", array("zincrby", "set1", "z1", "-1.21"));
+        assertCommandEquals("1", array("zscore", "zset1", "z1"));
+        assertCommandEquals("3", array("zincrby", "zset1", "2", "z1"));
+        assertCommandEquals("0", array("zincrby", "zset1", "-3", "z1"));
+        assertCommandEquals("-1", array("zincrby", "zset1", "-3", "z2"));
+        assertCommandEquals("-1.20999999999999996", array("zincrby", "zset1", "-1.21", "z1"));
         // error
-        assertCommandError(array("zincrby", "set1", "s1", "2"));
-        assertCommandError(array("zincrby", "set1", "z1"));
-        assertCommandError(array("zincrby", "set1", "z1", "a"));
-        assertCommandError(array("zincrby", "set1", "z1", "2", "3"));
+        assertCommandError(array("zincrby", "s1", "2", "s1"));
+        assertCommandError(array("zincrby", "zset1", "z1"));
+        assertCommandError(array("zincrby", "zset1", "a", "z1"));
+        assertCommandError(array("zincrby", "zset1", "2", "z1", "3"));
     }
 
     @Test
