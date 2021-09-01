@@ -1,8 +1,9 @@
-package com.github.zxl0714.redismock.executor;
+package com.github.zxl0714.redismock.executor.str;
 
 import com.github.zxl0714.redismock.RedisBase;
 import com.github.zxl0714.redismock.Response;
 import com.github.zxl0714.redismock.Slice;
+import com.github.zxl0714.redismock.executor.AbstractExecutor;
 import com.github.zxl0714.redismock.expecptions.BaseException;
 import com.github.zxl0714.redismock.expecptions.WrongValueTypeException;
 

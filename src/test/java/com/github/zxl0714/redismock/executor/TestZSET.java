@@ -267,11 +267,70 @@ public class TestZSET extends TestCommandExecutor {
 
     }
 
+    @Test
+    public void testZrangebyscore() throws ParseErrorException, EOFException, IOException {
+        init();
+        assertEquals(array("z3", "z1", "z2"), exec(array("zrangebyscore", "zset1", "-inf",  "+inf")));
+        assertEquals(array(), exec(array("zrangebyscore", "zset0", "-inf",  "+inf")));
+        assertEquals(array("z3"), exec(array("zrangebyscore", "zset1", "-inf",  "+inf", "limit", "0", "1")));
+        assertEquals(array("z1"), exec(array("zrangebyscore", "zset1", "-inf",  "+inf", "limit", "1", "1")));
+        assertEquals(array("z1", "z2"), exec(array("zrangebyscore", "zset1", "-inf",  "+inf", "limit", "1", "2")));
+        assertEquals(array(), exec(array("zrangebyscore", "zset1", "-inf",  "+inf", "limit", "10", "2")));
+        assertEquals(array(), exec(array("zrangebyscore", "zset1", "-inf",  "+inf", "limit", "-1", "2")));
+        assertEquals(array("z3", "z1", "z2"), exec(array("zrangebyscore", "zset1", "-1.11",  "2")));
+        assertEquals(array("z1", "z2"), exec(array("zrangebyscore", "zset1", "(-1.11",  "2")));
+        assertEquals(array("z1", "1"), exec(array("zrangebyscore", "zset1", "-inf",  "+inf", "limit", "1", "1", "withscores")));
+        // error
+        assertCommandError(array("zrangebyscore", "s1", "-inf", "+inf"));
+        assertCommandError(array("zrangebyscore", "zset1", "-inf"));
+        assertCommandError(array("zrangebyscore", "zset1", "-inf", "+xxx"));
+        assertCommandError(array("zrangebyscore", "zset1", "-inf", "+inf", "limit", "aaa", "1"));
+        assertCommandError(array("zrangebyscore", "zset1", "-inf", "+inf", "limit", "1"));
+        assertCommandError(array("zrangebyscore", "zset1", "-inf", "+inf", "limit", "1", "1", "xxx"));
+    }
+    
+    @Test
+    public void testZrevrangebyscore() throws ParseErrorException, EOFException, IOException {
+        init();
+        assertEquals(array(), exec(array("zrevrangebyscore", "zset1", "-inf",  "+inf")));
+        assertEquals(array("z2", "z1", "z3"), exec(array("zrevrangebyscore", "zset1", "+inf",  "-inf")));
+        assertEquals(array(), exec(array("zrevrangebyscore", "zset0", "-inf",  "+inf")));
+        assertEquals(array("z2"), exec(array("zrevrangebyscore", "zset1", "+inf",  "-inf", "limit", "0", "1")));
+        assertEquals(array("z1"), exec(array("zrevrangebyscore", "zset1", "+inf",  "-inf", "limit", "1", "1")));
+        assertEquals(array("z1", "z3"), exec(array("zrevrangebyscore", "zset1", "+inf",  "-inf", "limit", "1", "2")));
+        assertEquals(array(), exec(array("zrevrangebyscore", "zset1", "+inf",  "-inf", "limit", "10", "2")));
+        assertEquals(array(), exec(array("zrevrangebyscore", "zset1", "+inf",  "-inf", "limit", "-1", "2")));
+        assertEquals(array("z2", "z1", "z3"), exec(array("zrevrangebyscore", "zset1", "2",  "-1.11")));
+        assertEquals(array("z1", "z3"), exec(array("zrevrangebyscore", "zset1", "(2",  "-1.11")));
+        assertEquals(array("z1", "1"), exec(array("zrevrangebyscore", "zset1", "+inf",  "-inf", "limit", "1", "1", "withscores")));
+        // error
+        assertCommandError(array("zrevrangebyscore", "s1", "-inf", "+inf"));
+        assertCommandError(array("zrevrangebyscore", "zset1", "-inf"));
+        assertCommandError(array("zrevrangebyscore", "zset1", "-inf", "+xxx"));
+        assertCommandError(array("zrevrangebyscore", "zset1", "-inf", "+inf", "limit", "aaa", "1"));
+        assertCommandError(array("zrevrangebyscore", "zset1", "-inf", "+inf", "limit", "1"));
+        assertCommandError(array("zrevrangebyscore", "zset1", "-inf", "+inf", "limit", "1", "1", "xxx"));
+    }
+
+    @Test
+    public void testZremrangebyscore() throws ParseErrorException, EOFException {
+        init();
+        assertCommandEquals(0, array("zremrangebyscore", "zset0", "-inf", "+inf"));
+        assertCommandEquals(3, array("zremrangebyscore", "zset1", "-inf", "+inf"));
+        init();
+        assertCommandEquals(1, array("zremrangebyscore", "zset1", "-1.11", "(1"));
+        assertCommandEquals(2, array("zremrangebyscore", "zset1", "1", "2"));
+        // error
+        assertCommandError(array("zremrangebyscore", "s1", "-inf", "+inf"));
+        assertCommandError(array("zremrangebyscore", "zset1", "-inf", "+xxx"));
+        assertCommandError(array("zremrangebyscore", "zset1", "-inf", "+inf", "xxx"));
+    }
+
+
     protected void init() throws ParseErrorException, EOFException {
         assertCommandOK(array("set", "s1", "s1"));
         assertCommandEquals(1, array("zadd", "zset1", "1", "z1"));
         assertCommandEquals(1, array("zadd", "zset1", "2", "z2"));
         assertCommandEquals(1, array("zadd", "zset1", "-1.11", "z3"));
     }
-
 }

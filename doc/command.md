@@ -1,52 +1,210 @@
 ## Keys
 
-* **DEL**
-* ~~DUMP~~
-* **EXISTS**
-* **EXPIRE**
-* **EXPIREAT**
-* **KEYS**
-* ~~MIGRATE~~
-* **MOVE**
-* ~~OBJECT~~
-* **PERSIST**
-* **PEXPIRE**
-* **PEXPIREAT**
-* ~~PEXPIRETIME~~
-* **PTTL**
-* **RANDOMKEY**
-* **RENAME**
-* **RENAMEEX**
-* ~~RESTORE~~
-* ~~SORT~~
-* ~~SORT_RO~~
-* ~~TOUCH~~
-* **TTL**
-* **TYPE**
-* ~~UNLINK~~
-* ~~WAIT~~
-* **SCAN**
+DEL
+
+EXISTS
+
+EXPIRE
+
+EXPIREAT
+
+KEYS
+
+MOVE
+
+PERSIST
+
+PEXPIRE
+
+PEXPIREAT
+
+PTTL
+
+RANDOMKEY
+
+RENAME
+
+RENAMEEX
+
+TTL
+
+TYPE
+
+SCAN
+
+## STRING
+
+APPEND
+
+DECRBY
+
+DECR
+
+GET
+
+GETSET
+
+INCRBY
+
+INCR
+
+MGET
+
+MSET
+
+PSETEX
+
+SET
+
+SETEX
+
+SETNX
+
+STRLEN
+
+GETBIT
+
+## HASH
+
+HDEL
+
+HEXISTS
+
+HGETALL
+
+HGET
+
+HINCRBY
+
+HINCRBYFLOAT
+
+HKEYS
+
+HLEN
+
+HMGET
+
+HMSET
+
+HSCAN
+
+HSET
+
+HSETNX
+
+HSTRLEN
+
+HVALS
+
+## SET
+
+SADD
+
+SCARD
+
+SDIFF
+
+SDIFFSTORE
+
+SINTER
+
+SINTERSTORE
+
+SUNION
+
+SUNIONSTORE
+
+SISMEMBER
+
+SMEMBERS
+
+SMOVE
+
+SPOP
+
+SRANDMEMBER
+
+SREM
+
+SSCAN
 
 ## ZSET
 
-* **ZADD**
-* **ZCARD**
-* **ZCOUNT**
-* **ZINCRBY**
-* **ZSCORE**
-* **ZUNIONSTORE**
-* **ZINTERSTORE**
-* ~~ZLEXCOUNT~~
-* ~~ZRANGEBYLEX~~
-* **ZRANGE**
-* ZRANGEBYSCORE
-* **ZRANK**
-* **ZREM**
-* ZREMRANGEBYLEX
-* ZREMRANGEBYRANK
-* ZREMRANGEBYSCORE
-* **ZREVRANGE**
-* ~~ZREVRANGEBYLEX~~
-* ZREVRANGEBYSCORE
-* **ZREVRANK**
-* **ZSCAN**
+ZADD
+
+ZCARD
+
+ZCOUNT
+
+ZINCRBY
+
+ZSCORE
+
+ZUNIONSTORE
+
+ZINTERSTORE
+
+~~ZLEXCOUNT~~
+
+~~ZRANGEBYLEX~~
+
+ZRANGE
+
+~~ZRANGEBYSCORE~~
+
+ZRANK
+
+ZREM
+
+~~ZREMRANGEBYLEX~~
+
+~~ZREMRANGEBYRANK~~
+
+~~ZREMRANGEBYSCORE~~
+
+ZREVRANGE
+
+~~ZREVRANGEBYLEX~~
+
+~~ZREVRANGEBYSCORE~~
+
+ZREVRANK
+
+ZSCAN
+
+## PUB/SUB
+
+PUBLISH
+
+PUBSUB
+
+SUBSCRIBE
+
+UNSUBSCRIBE
+
+## HyperLogLog 
+
+PFADD
+
+PFCOUNT
+
+PFMERGE
+
+## SCRIPT
+
+EVAL
+
+##### 目前 eval 指令存在的问题:
+
+1. 在lua脚本中可以创建全局变量（在redis中执行的lua脚本不允许创建全局变量，会返回异常）
+2. 在lua脚本中支持了package基础包的相关函数（在redis中执行的lua脚本没有引入package包）
+3. 在lua脚本中尚未支持第三方包struct、cjson、bitop、cmsgpack
+4. 暂不支持在lua脚本中调用redis.log指令
+
+## OTHER
+
+QUIT
+
+PING
+
+SELECT

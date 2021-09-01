@@ -58,7 +58,8 @@ public abstract class AbstractZSetExecutor extends AbstractExecutor {
         }
     }
 
-    public List<Map.Entry<Slice, Double>> count(ZSet zSet, double min, double max, boolean opMin, boolean opMax) {
+    public List<Map.Entry<Slice, Double>> count(ZSet zSet, double min, double max,
+                                                boolean opMin, boolean opMax) {
         List<Map.Entry<Slice, Double>> list = new ArrayList<>(zSet.entrySet());
         list.sort(cmp);
         int start = -1;

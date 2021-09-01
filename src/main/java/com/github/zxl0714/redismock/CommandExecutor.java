@@ -186,6 +186,9 @@ public class CommandExecutor {
         register("zrevrank", new ZREVRANKExecutor(), true);
         register("zrem", new ZREMExecutor(), true);
         register("zscan", new ZSCANExecutor(), true);
+        register("zrangebyscore", new ZRANGEBYSCOREExecutor(), true);
+        register("zremrangebyscore", new ZREMRANGEBYSCOREExecutor(), true);
+        register("zrevrangebyscore", new ZREVRANGEBYSCOREExecutor(), true);
 
     }
 
