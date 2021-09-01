@@ -194,6 +194,24 @@ public class TestZSET extends TestCommandExecutor {
     }
 
     @Test
+    public void testzremrangebyrank() throws ParseErrorException, EOFException {
+        init();
+        assertCommandEquals(0, array("zremrangebyrank", "zset0", "0", "-1"));
+        assertCommandEquals(3, array("zremrangebyrank", "zset1", "0", "-1"));
+        init();
+        assertCommandEquals(1, array("zremrangebyrank", "zset1", "0", "0"));
+        assertCommandEquals(2, array("zremrangebyrank", "zset1", "0", "-1"));
+        assertCommandEquals(0, array("zremrangebyrank", "zset1", "0", "-1"));
+        init();
+        assertCommandEquals(0, array("zremrangebyrank", "zset1", "0", "-10"));
+        // error
+        assertCommandError(array("zremrangebyrank", "s1", "0", "1"));
+        assertCommandError(array("zremrangebyrank", "zset1", "0"));
+        assertCommandError(array("zremrangebyrank", "zset1", "0", "1", "2"));
+        assertCommandError(array("zremrangebyrank", "zset1", "0", "aaa"));
+    }
+
+    @Test
     public void testZrevrank() throws ParseErrorException, EOFException {
         init();
         assertCommandNull(array("zrevrank", "zset1", "z5"));
