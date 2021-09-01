@@ -23,7 +23,7 @@ public class TestZSET extends TestCommandExecutor {
         assertCommandEquals(0, array("zadd", "zset1", "2", "z1"));
         assertCommandEquals("2", array("zscore", "zset1", "z1"));
         assertCommandEquals(1, array("zadd", "zset1", "-1.11", "z2"));
-        assertCommandEquals("-1.11", array("zscore", "zset1", "z2"));
+        assertCommandEquals("-1.1100000000000001", array("zscore", "zset1", "z2"));
         assertCommandEquals(2, array("zadd", "zset1", "-1.11", "z2", "3", "z3", "4", "z4"));
         assertCommandEquals("4", array("zadd", "zset1", "incr", "2", "z1"));
         assertCommandEquals(0, array("zadd", "zset1", "xx", "10", "z1"));
