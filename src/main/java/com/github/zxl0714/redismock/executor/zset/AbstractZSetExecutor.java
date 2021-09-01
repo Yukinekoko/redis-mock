@@ -15,8 +15,6 @@ import java.util.*;
  */
 public abstract class AbstractZSetExecutor extends AbstractExecutor {
 
-    // private Comparator<Map.Entry<Slice, Double>> cmp = (o1, o2) -> (int) (o1.getValue() - o2.getValue());
-
     private final Comparator<Map.Entry<Slice, Double>> cmp = (o1, o2) -> {
         if (o1.getValue() > o2.getValue()) {
             return 1;

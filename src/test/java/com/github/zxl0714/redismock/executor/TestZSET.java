@@ -7,6 +7,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author snowmeow (yuki754685421@163.com)
  * @date 2021/8/30
@@ -203,6 +205,66 @@ public class TestZSET extends TestCommandExecutor {
         assertCommandError(array("zrevrank", "s1", "z1"));
         assertCommandError(array("zrevrank", "zset1"));
         assertCommandError(array("zrevrank", "zset1", "s1", "s2"));
+    }
+
+    @Test
+    public void testZrem() throws ParseErrorException, EOFException {
+        init();
+        assertCommandEquals(0, array("zrem", "zset0", "z1", "z2"));
+        assertCommandEquals(1, array("zrem", "zset1", "z1", "z4"));
+        assertCommandEquals(1, array("zrem", "zset1", "z1", "z2"));
+        // error
+        assertCommandError(array("zrem", "s1", "z1"));
+        assertCommandError(array("zrem", "zset1"));
+
+    }
+
+    @Test
+    public void testZscan() throws ParseErrorException, EOFException, IOException {
+        init();
+        assertEquals("*2\r\n$1\r\n0\r\n*-1\r\n",
+            exec(array("zscan", "zset0", "0")));
+        assertCommandEquals(3, array("zadd", "zset1", "4" ,"z4", "5", "z5", "6", "z6"));
+        assertEquals("*2\r\n$1\r\n0\r\n*12\r\n" +
+                "$2\r\nz3\r\n$19\r\n-1.1100000000000001\r\n" +
+                "$2\r\nz1\r\n$1\r\n1\r\n" +
+                "$2\r\nz2\r\n$1\r\n2\r\n" +
+                "$2\r\nz4\r\n$1\r\n4\r\n" +
+                "$2\r\nz5\r\n$1\r\n5\r\n" +
+                "$2\r\nz6\r\n$1\r\n6\r\n",
+            exec(array("zscan", "zset1", "0")));
+        assertEquals("*2\r\n$1\r\n3\r\n*6\r\n" +
+                "$2\r\nz3\r\n$19\r\n-1.1100000000000001\r\n" +
+                "$2\r\nz1\r\n$1\r\n1\r\n" +
+                "$2\r\nz2\r\n$1\r\n2\r\n",
+            exec(array("zscan", "zset1", "0", "count", "3")));
+        assertEquals("*2\r\n$1\r\n0\r\n*6\r\n" +
+                "$2\r\nz4\r\n$1\r\n4\r\n" +
+                "$2\r\nz5\r\n$1\r\n5\r\n" +
+                "$2\r\nz6\r\n$1\r\n6\r\n",
+            exec(array("zscan", "zset1", "3", "count", "3")));
+        // match
+        assertEquals("*2\r\n$1\r\n5\r\n*2\r\n" +
+                "$2\r\nz1\r\n$1\r\n1\r\n",
+            exec(array("zscan", "zset1", "0", "count", "5", "match", "z1")));
+        assertEquals("*2\r\n$1\r\n3\r\n*6\r\n" +
+                "$2\r\nz3\r\n$19\r\n-1.1100000000000001\r\n" +
+                "$2\r\nz1\r\n$1\r\n1\r\n" +
+                "$2\r\nz2\r\n$1\r\n2\r\n",
+            exec(array("zscan", "zset1", "0", "count", "3", "match", "z*")));
+        // error
+        assertCommandError(array("zscan", "s1", "0"));
+        assertCommandError(array("zscan", "zset1"));
+        assertCommandError(array("zscan", "zset1", "-1"));
+        assertCommandError(array("zscan", "zset1", "abc"));
+        assertCommandError(array("zscan", "zset1", "0", "count", "0"));
+        assertCommandError(array("zscan", "zset1", "0", "count", "-1"));
+        assertCommandError(array("zscan", "zset1", "0", "count", "abc"));
+        assertCommandError(array("zscan", "zset1", "0", "count"));
+        assertCommandError(array("zscan", "zset1", "0", "baba", "0"));
+        assertCommandError(array("zscan", "zset1", "0", "count", "1", "match"));
+        assertCommandError(array("zscan", "zset1", "0", "count", "1", "match", "*", "a"));
+
     }
 
     protected void init() throws ParseErrorException, EOFException {
