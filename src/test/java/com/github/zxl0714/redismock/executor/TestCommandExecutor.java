@@ -152,13 +152,36 @@ public class TestCommandExecutor {
     }
 
     @Test
-    public void testSetAndGet() throws ParseErrorException, EOFException {
+    public void testSetAndGet() throws ParseErrorException, EOFException, InterruptedException {
         assertCommandNull(array("GET", "ab"));
         assertCommandOK(array("SET", "ab", "abc"));
         assertCommandEquals("abc", array("GET", "ab"));
         assertCommandOK(array("SET", "ab", "abd"));
         assertCommandEquals("abd", array("GET", "ab"));
         assertCommandNull(array("GET", "ac"));
+
+        //ex px exat pxat
+        assertCommandOK(array("SET", "s1", "str", "ex", "1"));
+        assertCommandEquals("str", array("GET", "s1"));
+        assertCommandOK(array("SET", "s2", "str", "px", "1000"));
+        assertCommandEquals("str", array("GET", "s2"));
+        String time = String.valueOf((System.currentTimeMillis() / 1000) + 1);
+        assertCommandOK(array("SET", "s3", "str", "exat", time));
+        assertCommandEquals("str", array("GET", "s3"));
+        time = String.valueOf(System.currentTimeMillis() + 1000);
+        assertCommandOK(array("SET", "s4", "str", "pxat", time));
+        assertCommandEquals("str", array("GET", "s4"));
+        // nx xx
+        assertCommandOK(array("SET", "s5", "str", "ex", "1", "nx"));
+        assertCommandOK(array("SET", "s5", "str", "ex", "1", "xx"));
+        assertCommandNull(array("SET", "s5", "str", "ex", "1", "nx"));
+        assertCommandNull(array("SET", "s6", "str", "ex", "1", "xx"));
+        assertCommandOK(array("SET", "s7", "str", "nx", "ex", "1"));
+        Thread.sleep(1000);
+        assertCommandNull(array("GET", "s1"));
+        assertCommandNull(array("GET", "s2"));
+        assertCommandNull(array("GET", "s3"));
+        assertCommandNull(array("GET", "s4"));
     }
 
     @Test
