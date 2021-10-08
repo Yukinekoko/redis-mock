@@ -23,7 +23,7 @@ public class SETExecutor extends AbstractExecutor {
     @Override
     public Slice execute(List<Slice> params, RedisBase base, Socket socket) throws BaseException, IOException {
         checkArgumentsNumberGreater(params, 1);
-        Utils.checkArgumentsNumberLess(params, 7);
+        Utils.checkArgumentsNumberLess(params, 6);
 
         Slice key = params.get(0);
         Slice value = params.get(1);
@@ -35,7 +35,7 @@ public class SETExecutor extends AbstractExecutor {
         boolean isTimestamp = false;
         long expire = -1L;
         while (cur < params.size()) {
-            String param = params.get(cur).toString();
+            String param = params.get(cur).toString().toLowerCase();
             if (param.equals("nx") || param.equals("xx")) {
                 if (mode != null && !mode.equals(param)) {
                     throw new WrongValueTypeException("ERR XX and NX options at the same time are not compatible");
