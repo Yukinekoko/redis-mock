@@ -270,4 +270,10 @@ public class RedisBase {
         }
         return index;
     }
+
+    public synchronized void clearAll() {
+        for (int i = 0; i < dataBases.length; i++) {
+            dataBases[i] = new RedisDataBase();
+        }
+    }
 }

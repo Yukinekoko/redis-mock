@@ -11,9 +11,13 @@ import java.net.ServerSocket;
 public class RedisServer {
 
     private final int bindPort;
+
     private ServiceOptions options = new ServiceOptions();
+
     private ServerSocket server = null;
+
     private Thread service = null;
+
     private final RedisBase base;
 
     public RedisServer() throws IOException {
@@ -101,5 +105,9 @@ public class RedisServer {
         Preconditions.checkState(service == null);
 
         base.addSyncBase(slave.getBase());
+    }
+
+    public RedisOperation getOperation() {
+        return new RedisOperationImpl(base, this);
     }
 }
